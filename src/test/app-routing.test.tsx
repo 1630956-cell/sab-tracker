@@ -15,3 +15,17 @@ describe("App routing", () => {
     expect(matches.at(-1)?.routeId).not.toBe(rootRouteId);
   });
 });
+
+describe("myprofile pages", () => {
+  const router = createRouter({ routeTree, context: { queryClient: new QueryClient() } });
+  const leaf = (path: string) => router.matchRoutes(path).at(-1)?.routeId;
+
+  it("routes auth, dashboard and public profile URLs to their pages", () => {
+    expect(leaf("/login")).toBe("/login");
+    expect(leaf("/register")).toBe("/register");
+    expect(leaf("/dashboard")).toBe("/dashboard/");
+    expect(leaf("/dashboard/settings")).toBe("/dashboard/settings");
+    expect(leaf("/dashboard/premium")).toBe("/dashboard/premium");
+    expect(leaf("/nova")).toBe("/$username");
+  });
+});

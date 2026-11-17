@@ -28,3 +28,8 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- Brand strings (name, page titles, profile domain) come only from `src/lib/brand.ts`; pages import `BRAND` instead of hardcoding — keeps renames to one file.
+- Sample profile data lives in `src/lib/demo-profile.ts` until accounts are backed by Lovable Cloud — one place to swap for real data.
+- The app is dark-only; colors are oklch tokens in `src/styles.css` — no light theme to maintain.
