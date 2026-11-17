@@ -190,3 +190,36 @@
 @utility animate-fade-up {
   animation: fade-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+@utility glass-bar {
+  background-color: oklch(0.17 0.006 320 / 72%);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(20px) saturate(1.4);
+  -webkit-backdrop-filter: blur(20px) saturate(1.4);
+  box-shadow: 0 1px 0 0 oklch(1 0 0 / 6%) inset, 0 18px 50px -20px oklch(0 0 0 / 90%);
+}
+
+@utility glow-pill {
+  background-image: linear-gradient(135deg, oklch(0.62 0.16 319 / 35%), oklch(0.449 0.122 319.1 / 25%));
+  box-shadow: 0 0 0 1px oklch(0.62 0.16 319 / 35%) inset, 0 6px 24px -6px oklch(0.62 0.16 319 / 60%);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.2s ease;
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-rise {
+  animation: rise-in 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}

@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { ArrowRight, BarChart3, Link2, Palette, Share2, Sparkles, Award } from "lucide-react";
-import { SiteHeader } from "@/components/site/SiteHeader";
+import { OrbitNav } from "@/components/site/OrbitNav";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { ProfilePreview } from "@/components/site/ProfilePreview";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,8 @@ function Index() {
 
   return (
     <div className="min-h-screen">
-      <SiteHeader />
-      <main>
+      <OrbitNav />
+      <main className="pt-16">
         <section className="relative overflow-hidden">
           <div className="pointer-events-none absolute inset-0 bg-spotlight" />
           <div className="pointer-events-none absolute inset-0 bg-grid" />
