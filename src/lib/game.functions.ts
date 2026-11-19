@@ -16,7 +16,7 @@ export const getLiveStats = createServerFn({ method: "GET" }).handler(async () =
 export const askGemini = createServerFn({ method: "POST" })
   .inputValidator((d: { prompt: string }) => ({ prompt: String(d.prompt).slice(0, 2000) }))
   .handler(async ({ data }) => {
-    const key = process.env.GEMINI_API_KEY;
+    const key = process.env['GEMINI_API_KEY'];
     if (!key) return { text: null, error: "Gemini key not added yet." };
     const r = await fetch(
       "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",

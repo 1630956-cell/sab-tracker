@@ -37,7 +37,7 @@ function Home() {
   const list = useMemo(() => UPDATES.filter((u) => (u.title + u.items.join(" ") + u.n).toLowerCase().includes(q.toLowerCase())), [q]);
   const nextUpdate = useMemo(() => nextET(6, 15), []);
   const nextTaco = useMemo(() => nextET(2, 18), []);
-  const latest = UPDATES[0];
+  const latest = UPDATES[0]!;
 
   return (
     <div className="min-h-screen bg-background text-foreground">
