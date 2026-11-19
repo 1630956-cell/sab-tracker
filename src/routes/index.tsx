@@ -1,113 +1,139 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
-import { ArrowRight, BarChart3, Link2, Palette, Share2, Sparkles, Award } from "lucide-react";
-import { OrbitNav } from "@/components/site/OrbitNav";
-import { SiteFooter } from "@/components/site/SiteFooter";
-import { ProfilePreview } from "@/components/site/ProfilePreview";
-import { Button } from "@/components/ui/button";
+import { createFileRoute } from "@tanstack/react-router";
+import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useEffect, useMemo, useState } from "react";
 import { BRAND, brandMeta } from "@/lib/brand";
+import { GAME, SAMMY, UPDATES, nextET } from "@/lib/game-data";
+import { askGemini, getLiveStats } from "@/lib/game.functions";
 
-// The home route ships no og:image, so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
+const statsQuery = queryOptions({ queryKey: ["live"], queryFn: () => getLiveStats(), refetchInterval: 30_000 });
+
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: brandMeta(BRAND.titles.browser) }),
-  component: Index,
+  head: () => ({ meta: brandMeta(`${BRAND.name} — Steal a Brainrot live tracker`) }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(statsQuery),
+  component: Home,
 });
 
-const features = [
-  { icon: Palette, title: "Customize everything", text: "Backgrounds, colors, fonts, effects and layouts — make it unmistakably yours." },
-  { icon: Link2, title: "All your links", text: "Socials, projects and content gathered on one elegant page." },
-  { icon: BarChart3, title: "Real analytics", text: "See who visits, where they come from and what they click." },
-  { icon: Award, title: "Badges", text: "Show off your status with collectible profile badges." },
-  { icon: Share2, title: "Share anywhere", text: `One short link — ${BRAND.domain}/you — for every bio.` },
-  { icon: Sparkles, title: BRAND.titles.premium, text: "Exclusive effects, custom domains and priority features." },
-];
+const fmt = (n: number | null) => (n == null ? "—" : n.toLocaleString("en-US"));
 
-function Index() {
-  const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+function Countdown({ label, target }: { label: string; target: Date }) {
+  const [now, setNow] = useState<number | null>(null);
+  useEffect(() => { setNow(Date.now()); const i = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(i); }, []);
+  const s = now == null ? 0 : Math.max(0, Math.floor((target.getTime() - now) / 1000));
+  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  return (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 font-mono text-2xl text-foreground tabular-nums">{now == null ? "--" : `${d}d ${h}h ${m}m ${sec}s`}</div>
+    </div>
+  );
+}
+
+function Home() {
+  const { data } = useSuspenseQuery(statsQuery);
+  useQuery(statsQuery);
+  const [q, setQ] = useState("");
+  const [tab, setTab] = useState<"updates" | "sammy" | "ask">("updates");
+  const list = useMemo(() => UPDATES.filter((u) => (u.title + u.items.join(" ") + u.n).toLowerCase().includes(q.toLowerCase())), [q]);
+  const nextUpdate = useMemo(() => nextET(6, 15), []);
+  const nextTaco = useMemo(() => nextET(2, 18), []);
+  const latest = UPDATES[0];
 
   return (
-    <div className="min-h-screen">
-      <OrbitNav />
-      <main className="pt-16">
-        <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute inset-0 bg-spotlight" />
-          <div className="pointer-events-none absolute inset-0 bg-grid" />
-          <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pb-24 pt-20 lg:grid-cols-[1.15fr_1fr] lg:pt-28">
-            <div className="animate-fade-up">
-              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-foreground/5 px-3 py-1 text-xs text-muted-foreground">
-                <span className="size-1.5 rounded-full bg-primary-glow" />
-                The premium home for your online identity
-              </span>
-              <h1 className="mt-6 text-5xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-6xl lg:text-7xl">
-                <span className="text-gradient">Your profile,</span>
-                <br />
-                beautifully yours.
-              </h1>
-              <p className="mt-6 max-w-lg text-lg text-muted-foreground">
-                Create, customize, share and manage a stunning personal page with {BRAND.name}.
-              </p>
-              <form
-                className="mt-9 flex max-w-lg flex-col gap-2 rounded-2xl border border-border bg-card/80 p-2 backdrop-blur sm:flex-row"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  navigate({ to: "/register", search: { username: username.trim() || undefined } });
-                }}
-              >
-                <label className="flex flex-1 items-center rounded-xl px-3 text-sm">
-                  <span className="text-muted-foreground">{BRAND.domain}/</span>
-                  <input
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_.]/g, "").toLowerCase())}
-                    placeholder="username"
-                    aria-label="Choose your username"
-                    className="h-11 w-full bg-transparent text-foreground outline-none placeholder:text-muted-foreground/60"
-                  />
-                </label>
-                <Button type="submit" variant="hero" size="xl">
-                  Claim now <ArrowRight />
-                </Button>
-              </form>
-            </div>
-            <div className="animate-fade-up [animation-delay:150ms]">
-              <ProfilePreview />
-            </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
+        <div className="text-lg font-bold tracking-tight">🧠 {BRAND.name}</div>
+        <a href={GAME.url} target="_blank" rel="noreferrer" className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground">Play game</a>
+      </header>
+
+      <main className="mx-auto max-w-5xl space-y-6 px-5 pb-16">
+        <section className="rounded-2xl border border-border bg-card p-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="relative flex h-2.5 w-2.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" /><span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" /></span>
+            Live players in {GAME.name} · refreshes every 30s
+          </div>
+          <div className="mt-2 font-mono text-5xl font-bold tabular-nums sm:text-6xl">{fmt(data.playing)}</div>
+          {data.error && <p className="mt-2 text-sm text-destructive">{data.error}</p>}
+          <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+            <div><div className="text-muted-foreground">Total visits</div><div className="font-semibold">{fmt(data.visits)}</div></div>
+            <div><div className="text-muted-foreground">Favorites</div><div className="font-semibold">{fmt(data.favorites)}</div></div>
+            <div><div className="text-muted-foreground">Last game update</div><div className="font-semibold">{data.updated ? new Date(data.updated).toLocaleString() : "—"}</div></div>
           </div>
         </section>
 
-        <section id="features" className="mx-auto max-w-6xl px-5 py-24">
-          <div className="max-w-xl">
-            <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">Everything your profile needs.</h2>
-            <p className="mt-3 text-muted-foreground">Thoughtfully designed tools, none of the clutter.</p>
-          </div>
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map(({ icon: Icon, title, text }) => (
-              <div key={title} className="surface p-6 transition-colors hover:border-primary/50">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-primary/20 text-primary-glow">
-                  <Icon className="size-5" />
-                </div>
-                <h3 className="mt-5 font-semibold tracking-tight">{title}</h3>
-                <p className="mt-1.5 text-sm text-muted-foreground">{text}</p>
-              </div>
+        <section className="grid gap-3 sm:grid-cols-2">
+          <Countdown label="Next Saturday update + Admin Abuse (3 PM ET)" target={nextUpdate} />
+          <Countdown label="Taco Tuesday Admin Abuse (6 PM ET)" target={nextTaco} />
+        </section>
+
+        <section className="rounded-2xl border border-primary/40 bg-card p-6">
+          <div className="text-xs uppercase tracking-wider text-primary">Latest update · #{latest.n} · {latest.date}</div>
+          <h2 className="mt-1 text-2xl font-bold">{latest.title}</h2>
+          <ul className="mt-3 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">{latest.items.map((i) => <li key={i}>• {i}</li>)}</ul>
+        </section>
+
+        <nav className="flex gap-2">
+          {(["updates", "sammy", "ask"] as const).map((t) => (
+            <button key={t} onClick={() => setTab(t)} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
+              {t === "updates" ? "Update log" : t === "sammy" ? "Sammy & the game" : "Ask Gemini (live web)"}
+            </button>
+          ))}
+        </nav>
+
+        {tab === "updates" && (
+          <section className="space-y-3">
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search updates, Brainrots, events…" className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-primary" />
+            {list.map((u) => (
+              <article key={u.n} className="rounded-xl border border-border bg-card p-4">
+                <div className="flex items-baseline justify-between"><h3 className="font-semibold">#{u.n} · {u.title}</h3><span className="text-xs text-muted-foreground">{u.date}</span></div>
+                <ul className="mt-2 space-y-0.5 text-sm text-muted-foreground">{u.items.map((i) => <li key={i}>• {i}</li>)}</ul>
+              </article>
             ))}
-          </div>
-        </section>
+            {list.length === 0 && <p className="text-sm text-muted-foreground">No matches.</p>}
+          </section>
+        )}
 
-        <section className="mx-auto max-w-6xl px-5 pb-24">
-          <div className="relative overflow-hidden rounded-3xl border border-border bg-card px-8 py-16 text-center">
-            <div className="pointer-events-none absolute inset-0 bg-spotlight" />
-            <div className="relative">
-              <h2 className="text-3xl font-semibold tracking-[-0.035em] sm:text-4xl">Claim your {BRAND.name} today.</h2>
-              <p className="mx-auto mt-3 max-w-md text-muted-foreground">Free forever. Upgrade to Premium whenever you want more.</p>
-              <Button variant="hero" size="xl" className="mt-8" onClick={() => navigate({ to: "/register" })}>
-                Create your page <ArrowRight />
-              </Button>
+        {tab === "sammy" && (
+          <section className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-border bg-card p-5">
+              <h3 className="text-lg font-bold">{SAMMY.display} (@{SAMMY.handle})</h3>
+              <a className="text-sm text-primary" href={`https://www.roblox.com/users/${SAMMY.userId}/profile`} target="_blank" rel="noreferrer">Roblox profile ↗</a>
+              <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">{SAMMY.facts.map((f) => <li key={f}>• {f}</li>)}</ul>
             </div>
-          </div>
-        </section>
+            <div className="rounded-xl border border-border bg-card p-5">
+              <h3 className="text-lg font-bold">{GAME.name}</h3>
+              <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">{SAMMY.gameFacts.map((f) => <li key={f}>• {f}</li>)}</ul>
+              <div className="mt-4 space-y-1 font-mono text-xs text-muted-foreground">
+                <div>Place ID: {GAME.placeId}</div><div>Universe ID: {GAME.universeId}</div><div>Group: {GAME.groupName} ({GAME.groupId})</div>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">Only the game with these IDs is official — anything else is a copy.</p>
+            </div>
+          </section>
+        )}
+
+        {tab === "ask" && <AskPanel />}
       </main>
-      <SiteFooter />
     </div>
+  );
+}
+
+function AskPanel() {
+  const ask = useServerFn(askGemini);
+  const [prompt, setPrompt] = useState("What is the newest Steal a Brainrot update and what did it add?");
+  const [out, setOut] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const presets = ["What's the newest update?", "Latest news about SpyderSammy", "When is the next update and what's leaked?", "Any active codes?"];
+  async function run(p = prompt) {
+    setLoading(true); setOut(null);
+    const r = await ask({ data: { prompt: p } });
+    setOut(r.error ?? r.text); setLoading(false);
+  }
+  return (
+    <section className="space-y-3 rounded-xl border border-border bg-card p-5">
+      <div className="flex flex-wrap gap-2">{presets.map((p) => <button key={p} onClick={() => { setPrompt(p); run(p); }} className="rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground">{p}</button>)}</div>
+      <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} className="w-full rounded-lg border border-input bg-background p-3 text-sm outline-none focus:border-primary" />
+      <button disabled={loading} onClick={() => run()} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{loading ? "Searching the web…" : "Ask"}</button>
+      {out && <div className="whitespace-pre-wrap rounded-lg bg-background p-4 text-sm">{out}</div>}
+    </section>
   );
 }

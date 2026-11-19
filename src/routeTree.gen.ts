@@ -10,147 +10,33 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as UsernameRouteImport } from './routes/$username'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard.index'
-import { Route as DashboardCustomizeRouteImport } from './routes/dashboard.customize'
-import { Route as DashboardLinksRouteImport } from './routes/dashboard.links'
-import { Route as DashboardPremiumRouteImport } from './routes/dashboard.premium'
-import { Route as DashboardSettingsRouteImport } from './routes/dashboard.settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const UsernameRoute = UsernameRouteImport.update({
-  id: '/$username',
-  path: '/$username',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardCustomizeRoute = DashboardCustomizeRouteImport.update({
-  id: '/customize',
-  path: '/customize',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardLinksRoute = DashboardLinksRouteImport.update({
-  id: '/links',
-  path: '/links',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardPremiumRoute = DashboardPremiumRouteImport.update({
-  id: '/premium',
-  path: '/premium',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => DashboardRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/$username': typeof UsernameRoute
-  '/dashboard': typeof DashboardRouteWithChildren
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
-  '/dashboard/customize': typeof DashboardCustomizeRoute
-  '/dashboard/links': typeof DashboardLinksRoute
-  '/dashboard/premium': typeof DashboardPremiumRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/$username': typeof UsernameRoute
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
-  '/dashboard/customize': typeof DashboardCustomizeRoute
-  '/dashboard/links': typeof DashboardLinksRoute
-  '/dashboard/premium': typeof DashboardPremiumRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/$username': typeof UsernameRoute
-  '/dashboard': typeof DashboardRouteWithChildren
-  '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
-  '/dashboard/customize': typeof DashboardCustomizeRoute
-  '/dashboard/links': typeof DashboardLinksRoute
-  '/dashboard/premium': typeof DashboardPremiumRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/$username'
-    | '/dashboard'
-    | '/login'
-    | '/register'
-    | '/dashboard/customize'
-    | '/dashboard/links'
-    | '/dashboard/premium'
-    | '/dashboard/settings'
-    | '/dashboard/'
+  fullPaths: '/'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/$username'
-    | '/login'
-    | '/register'
-    | '/dashboard/customize'
-    | '/dashboard/links'
-    | '/dashboard/premium'
-    | '/dashboard/settings'
-    | '/dashboard'
-  id:
-    | '__root__'
-    | '/'
-    | '/$username'
-    | '/dashboard'
-    | '/login'
-    | '/register'
-    | '/dashboard/customize'
-    | '/dashboard/links'
-    | '/dashboard/premium'
-    | '/dashboard/settings'
-    | '/dashboard/'
+  to: '/'
+  id: '__root__' | '/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  UsernameRoute: typeof UsernameRoute
-  DashboardRoute: typeof DashboardRouteWithChildren
-  LoginRoute: typeof LoginRoute
-  RegisterRoute: typeof RegisterRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -162,98 +48,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$username': {
-      id: '/$username'
-      path: '/$username'
-      fullPath: '/$username'
-      preLoaderRoute: typeof UsernameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard/': {
-      id: '/dashboard/'
-      path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/customize': {
-      id: '/dashboard/customize'
-      path: '/customize'
-      fullPath: '/dashboard/customize'
-      preLoaderRoute: typeof DashboardCustomizeRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/links': {
-      id: '/dashboard/links'
-      path: '/links'
-      fullPath: '/dashboard/links'
-      preLoaderRoute: typeof DashboardLinksRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/premium': {
-      id: '/dashboard/premium'
-      path: '/premium'
-      fullPath: '/dashboard/premium'
-      preLoaderRoute: typeof DashboardPremiumRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/settings': {
-      id: '/dashboard/settings'
-      path: '/settings'
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
   }
 }
 
-interface DashboardRouteChildren {
-  DashboardCustomizeRoute: typeof DashboardCustomizeRoute
-  DashboardLinksRoute: typeof DashboardLinksRoute
-  DashboardPremiumRoute: typeof DashboardPremiumRoute
-  DashboardSettingsRoute: typeof DashboardSettingsRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
-}
-
-const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardCustomizeRoute: DashboardCustomizeRoute,
-  DashboardLinksRoute: DashboardLinksRoute,
-  DashboardPremiumRoute: DashboardPremiumRoute,
-  DashboardSettingsRoute: DashboardSettingsRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
-}
-
-const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
-  DashboardRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  UsernameRoute: UsernameRoute,
-  DashboardRoute: DashboardRouteWithChildren,
-  LoginRoute: LoginRoute,
-  RegisterRoute: RegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
