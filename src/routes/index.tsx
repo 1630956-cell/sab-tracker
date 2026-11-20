@@ -1,12 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { BRAND, brandMeta } from "@/lib/brand";
 import { GAME, SAMMY, UPDATES, nextET } from "@/lib/game-data";
 import { askGemini, getLiveStats } from "@/lib/game.functions";
+import { DatabasePanel } from "@/components/DatabasePanel";
 
-const statsQuery = queryOptions({ queryKey: ["live"], queryFn: () => getLiveStats(), refetchInterval: 30_000 });
+const statsQuery = queryOptions({ queryKey: ["live"], queryFn: () => getLiveStats(), staleTime: 25_000, refetchInterval: 30_000 });
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: brandMeta(`${BRAND.name} — Steal a Brainrot live tracker`) }),
@@ -31,9 +32,8 @@ function Countdown({ label, target }: { label: string; target: Date }) {
 
 function Home() {
   const { data } = useSuspenseQuery(statsQuery);
-  useQuery(statsQuery);
   const [q, setQ] = useState("");
-  const [tab, setTab] = useState<"updates" | "sammy" | "ask">("updates");
+  const [tab, setTab] = useState<"updates" | "database" | "sammy" | "ask">("updates");
   const list = useMemo(() => UPDATES.filter((u) => (u.title + u.items.join(" ") + u.n).toLowerCase().includes(q.toLowerCase())), [q]);
   const nextUpdate = useMemo(() => nextET(6, 15), []);
   const nextTaco = useMemo(() => nextET(2, 18), []);
@@ -72,10 +72,10 @@ function Home() {
           <ul className="mt-3 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">{latest.items.map((i) => <li key={i}>• {i}</li>)}</ul>
         </section>
 
-        <nav className="flex gap-2">
-          {(["updates", "sammy", "ask"] as const).map((t) => (
+        <nav className="flex flex-wrap gap-2">
+          {(["updates", "database", "sammy", "ask"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
-              {t === "updates" ? "Update log" : t === "sammy" ? "Sammy & the game" : "Ask Gemini (live web)"}
+              {t === "updates" ? "Update log" : t === "database" ? "Database" : t === "sammy" ? "Sammy & the game" : "Ask AI (live web)"}
             </button>
           ))}
         </nav>
@@ -111,6 +111,8 @@ function Home() {
           </section>
         )}
 
+        {tab === "database" && <DatabasePanel />}
+
         {tab === "ask" && <AskPanel />}
       </main>
     </div>
@@ -122,7 +124,7 @@ function AskPanel() {
   const [prompt, setPrompt] = useState("What is the newest Steal a Brainrot update and what did it add?");
   const [out, setOut] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const presets = ["What's the newest update?", "Latest news about SpyderSammy", "When is the next update and what's leaked?", "Any active codes?"];
+  const presets = ["What's the newest update?", "What events are coming next?", "Latest news about SpyderSammy", "When is the next update and what's leaked?", "Any active codes?"];
   async function run(p = prompt) {
     setLoading(true); setOut(null);
     const r = await ask({ data: { prompt: p } });
