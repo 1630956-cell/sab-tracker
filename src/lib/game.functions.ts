@@ -25,9 +25,10 @@ export const askGemini = createServerFn({ method: "POST" })
       body: JSON.stringify({
         model: "google/gemini-3.8-flash",
         stream: true,
+        reasoning_effort: "low",
         tools: [{ type: "google_search" }],
         messages: [
-          { role: "system", content: `You are a Steal a Brainrot (Roblox) expert. Today is ${new Date().toDateString()}. Search the web for the newest info. Give a SHORT, simple answer: 1-2 sentences, or at most 3 short bullet points. No intro, no long paragraphs, no filler. Include dates when relevant. Mark leaks/rumors as (unconfirmed).` },
+          { role: "system", content: `You are a Steal a Brainrot (Roblox) expert. Today is ${new Date().toDateString()}. Known fact: Sammy's (SpyderSammy's) cat is named Nova. Search the web only if needed for newer info. Reply with ONLY the answer itself — a few words or one short sentence. No intro, no explanation, no lists, no markdown. Add (unconfirmed) only for leaks or rumors.` },
           { role: "user", content: data.prompt },
         ],
       }),
@@ -58,5 +59,5 @@ export const askGemini = createServerFn({ method: "POST" })
         } catch { /* partial frame */ }
       }
     }
-    return { text: text || "No answer.", error: null };
+    return { text: text.replace(/\*\*|__|^[*-]\s+/gm, "").trim() || "No answer.", error: null };
   });

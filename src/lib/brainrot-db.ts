@@ -16,7 +16,7 @@ export const DB = {
     { label: "Handle", value: "@SpyderSammy — display name “Sammy”, Roblox user ID 2678001507" },
     { label: "Real name", value: "Reported as Sam Brakta (unconfirmed by Sammy himself)" },
     { label: "Age / country", value: "Reported as 24, United States (unconfirmed)" },
-    { label: "Cats", value: "Reportedly two cats named Nova and Mangus (unconfirmed — only one trivia source)" },
+    { label: "Cat", value: "Nova" },
     { label: "Role", value: "Owner of the BRAZILIAN SPYDER group; Chief Production/Product Officer at Do Big Studios" },
     { label: "On Roblox since", value: "2013" },
     { label: "Games", value: "Crab Game (2022), Mining Clicker Simulator, Pixel Tower Defense (2024); worked on Blade Ball, Race Clicker, Schedule, Fisch" },
