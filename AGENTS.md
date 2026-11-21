@@ -33,3 +33,4 @@ use the editor.
 - Brand strings (name, titles) come only from `src/lib/brand.ts`; pages import `BRAND` instead of hardcoding — keeps renames to one file.
 - Game facts and the seed update log live in `src/lib/game-data.ts`; the preset knowledge base (Sammy, obtain methods, timeline, mutations, codes) lives in `src/lib/brainrot-db.ts`; live data (player count, AI web answers via Lovable AI Gateway with google_search) comes from server functions in `src/lib/game.functions.ts` — keeps keys server-side.
 - The app is dark-only; colors are oklch tokens in `src/styles.css` — no light theme to maintain.
+- Obvious questions are answered instantly from preset data in `src/lib/quick-answers.ts` (client and server) before any AI call — saves credits and wait time; news/leaks always go to the AI.

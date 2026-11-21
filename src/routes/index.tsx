@@ -7,6 +7,7 @@ import { GAME, SAMMY, UPDATES, nextET } from "@/lib/game-data";
 import { askGemini, getLiveStats } from "@/lib/game.functions";
 import { DatabasePanel } from "@/components/DatabasePanel";
 import { DB } from "@/lib/brainrot-db";
+import { quickAnswer } from "@/lib/quick-answers";
 
 const statsQuery = queryOptions({ queryKey: ["live"], queryFn: () => getLiveStats(), staleTime: 25_000, refetchInterval: 30_000 });
 
@@ -129,6 +130,8 @@ function AskPanel() {
   const [loading, setLoading] = useState(false);
   const presets = ["What's the newest update?", "What events are coming next?", "Latest news about SpyderSammy", "When is the next update and what's leaked?", "Any active codes?"];
   async function run(p = prompt) {
+    const quick = quickAnswer(p);
+    if (quick) { setOut(quick); return; }
     setLoading(true); setOut(null);
     const r = await ask({ data: { prompt: p } });
     setOut(r.error ?? r.text); setLoading(false);

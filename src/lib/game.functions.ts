@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { GAME } from "./game-data";
+import { quickAnswer } from "./quick-answers";
 
 export const getLiveStats = createServerFn({ method: "GET" }).handler(async () => {
   try {
@@ -17,6 +18,8 @@ export const getLiveStats = createServerFn({ method: "GET" }).handler(async () =
 export const askGemini = createServerFn({ method: "POST" })
   .inputValidator((d: { prompt: string }) => ({ prompt: String(d.prompt).slice(0, 2000) }))
   .handler(async ({ data }) => {
+    const quick = quickAnswer(data.prompt);
+    if (quick) return { text: quick, error: null };
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { text: null, error: "AI is not set up for this app yet." };
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -28,7 +31,7 @@ export const askGemini = createServerFn({ method: "POST" })
         reasoning_effort: "low",
         tools: [{ type: "google_search" }],
         messages: [
-          { role: "system", content: `You are a Steal a Brainrot (Roblox) expert. Today is ${new Date().toDateString()}. Known fact: Sammy's (SpyderSammy's) cat is named Nova. Search the web only if needed for newer info. Reply with ONLY the answer itself — a few words or one short sentence. No intro, no explanation, no lists, no markdown. Add (unconfirmed) only for leaks or rumors.` },
+          { role: "system", content: `You are a Steal a Brainrot (Roblox) expert. Today is ${new Date().toDateString()}. Known facts: the owner/creator is Sammy (@SpyderSammy) — just call him Sammy and never mention his real name unless explicitly asked; his cat is named Nova. Search the web only if needed for newer info. Reply with ONLY the answer itself — a few words or one short sentence. No intro, no explanation, no lists, no markdown. Add (unconfirmed) only for leaks or rumors.` },
           { role: "user", content: data.prompt },
         ],
       }),
