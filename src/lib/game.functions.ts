@@ -27,7 +27,7 @@ export const askGemini = createServerFn({ method: "POST" })
         stream: true,
         tools: [{ type: "google_search" }],
         messages: [
-          { role: "system", content: `You are a Steal a Brainrot (Roblox) expert. Today is ${new Date().toDateString()}. Search the web for the newest info. Be concise, use bullet points, give dates. Mark leaks/rumors as unconfirmed.` },
+          { role: "system", content: `You are a Steal a Brainrot (Roblox) expert. Today is ${new Date().toDateString()}. Search the web for the newest info. Give a SHORT, simple answer: 1-2 sentences, or at most 3 short bullet points. No intro, no long paragraphs, no filler. Include dates when relevant. Mark leaks/rumors as (unconfirmed).` },
           { role: "user", content: data.prompt },
         ],
       }),

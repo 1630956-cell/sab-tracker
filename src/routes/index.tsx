@@ -6,6 +6,7 @@ import { BRAND, brandMeta } from "@/lib/brand";
 import { GAME, SAMMY, UPDATES, nextET } from "@/lib/game-data";
 import { askGemini, getLiveStats } from "@/lib/game.functions";
 import { DatabasePanel } from "@/components/DatabasePanel";
+import { DB } from "@/lib/brainrot-db";
 
 const statsQuery = queryOptions({ queryKey: ["live"], queryFn: () => getLiveStats(), staleTime: 25_000, refetchInterval: 30_000 });
 
@@ -72,6 +73,8 @@ function Home() {
           <ul className="mt-3 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">{latest.items.map((i) => <li key={i}>• {i}</li>)}</ul>
         </section>
 
+        <IncomingPanel />
+
         <nav className="flex flex-wrap gap-2">
           {(["updates", "database", "sammy", "ask"] as const).map((t) => (
             <button key={t} onClick={() => setTab(t)} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
@@ -136,6 +139,37 @@ function AskPanel() {
       <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} className="w-full rounded-lg border border-input bg-background p-3 text-sm outline-none focus:border-primary" />
       <button disabled={loading} onClick={() => run()} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{loading ? "Searching the web…" : "Ask"}</button>
       {out && <div className="whitespace-pre-wrap rounded-lg bg-background p-4 text-sm">{out}</div>}
+    </section>
+  );
+}
+
+function IncomingPanel() {
+  const ask = useServerFn(askGemini);
+  const [out, setOut] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  async function check() {
+    setLoading(true); setOut(null);
+    const r = await ask({ data: { prompt: "What is the next upcoming Steal a Brainrot update or event, and what is leaked or announced for it?" } });
+    setOut(r.error ?? r.text); setLoading(false);
+  }
+  return (
+    <section className="rounded-2xl border border-border bg-card p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-bold">Incoming updates</h2>
+        <button disabled={loading} onClick={check} className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground disabled:opacity-50">{loading ? "Checking the web…" : "Check latest leaks (AI)"}</button>
+      </div>
+      <ul className="mt-3 divide-y divide-border">
+        {DB.upcoming.map((u) => (
+          <li key={u.when + u.event} className="grid gap-1 py-2 text-sm sm:grid-cols-[200px_1fr]">
+            <span className="font-medium">{u.when}</span>
+            <span className="text-muted-foreground">
+              {u.event}
+              <span className={`ml-2 rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${u.status === "unconfirmed" ? "bg-destructive/15 text-destructive" : "bg-primary/15 text-primary"}`}>{u.status}</span>
+            </span>
+          </li>
+        ))}
+      </ul>
+      {out && <div className="mt-3 whitespace-pre-wrap rounded-lg bg-background p-3 text-sm">{out}</div>}
     </section>
   );
 }
