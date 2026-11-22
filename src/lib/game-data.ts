@@ -12,7 +12,7 @@ export type Update = { n: number; date: string; title: string; items: string[] }
 
 /** Seed database of known updates, newest first. Gemini refresh adds newer ones live. */
 export const UPDATES: Update[] = [
-  { n: 76, date: "2026-11-21", title: "New Bros + Hacker Mutation", items: ["Hacker mutation — 15× income (reported)", "Timmy Bros — Grim Cheese + Tim Cheese", "Kitsune Bros", "Tenini Ballini + Allesio Bros combo", "Bear-in-french-fries Bros"] },
+  { n: 76, date: "2026-11-21", title: "New Bros + Hacker Mutation", items: ["Hacker mutation — 15× income (reported)", "Timmy Bros — Grim Cheese + Tim Cheese", "Tenini Ballini + Allesio combo", "Kitsune (new Brainrot)", "Bear inside french fries (new Brainrot)"] },
   { n: 75, date: "2026-11-14", title: "Bros Machine", items: ["New Bros Machine", "Brainrot buffs"] },
   { n: 74, date: "2026-11-07", title: "Red Carpet Brainrots", items: ["Balloon Baboon (Secret) — $23.5M/s", "Bling Luming (Secret) — $2.6M/s", "Eclipse Admin Machine (community-reported)"] },
   { n: 73, date: "2026-10-31", title: "Halloween Trick or Treat", items: ["Headless Merchant", "Bat Trait", "Puppetmaster — $177.5M/s", "Scarino Crowino — $135M/s", "Scorpi Inferni — $76M/s", "Jacko Jakat — $41M/s", "Spooky Kart — $13M/s"] },
