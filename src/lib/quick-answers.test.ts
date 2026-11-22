@@ -13,10 +13,17 @@ describe("quickAnswer", () => {
     expect(quickAnswer("When did the game come out?")).toBe("May 16, 2025");
   });
   it("newest update comes from the update log", () => {
-    expect(quickAnswer("What's the newest update?")).toBe("Update 75: Bros Machine (2026-11-14)");
+    expect(quickAnswer("What's the newest update?")).toBe("Update 76: New Bros + Hacker Mutation (2026-11-21)");
   });
   it("next update is Saturday 3 PM ET", () => {
     expect(quickAnswer("When is the next update?")).toBe("Every Saturday at 3 PM ET");
+  });
+  it("Hacker mutation is 15x and the best mutation", () => {
+    expect(quickAnswer("What is the Hacker mutation multiplier?")).toBe("15× (reported)");
+    expect(quickAnswer("What's the best mutation?")).toBe("Hacker (15×, reported)");
+  });
+  it("Timmy Bros needs Grim Cheese + Tim Cheese", () => {
+    expect(quickAnswer("How do I make Timmy Bros?")).toBe("Grim Cheese + Tim Cheese");
   });
   it("leaks and real name still go to the AI", () => {
     expect(quickAnswer("What is leaked for the next update?")).toBeNull();

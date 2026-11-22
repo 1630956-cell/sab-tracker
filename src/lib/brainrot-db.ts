@@ -3,11 +3,11 @@ type Note = { name: string; note: string };
 type Status = "confirmed" | "expected" | "unconfirmed";
 
 export const DB = {
-  asOf: "Nov 20, 2026",
+  asOf: "Nov 21, 2026",
 
   upcoming: [
-    { when: "Sat Nov 21, 2026 · 3 PM ET", event: "Weekly Saturday update + Admin Abuse (contents not announced)", status: "expected" },
     { when: "Tue Nov 24, 2026 · 6 PM ET", event: "Taco Tuesday Admin Abuse", status: "expected" },
+    { when: "Sat Nov 28, 2026 · 3 PM ET", event: "Weekly Saturday update + Admin Abuse (contents not announced)", status: "expected" },
     { when: "Late Nov 2026", event: "Thanksgiving-themed update — no official announcement", status: "unconfirmed" },
     { when: "Dec 2026", event: "Christmas / winter event (last year: Santa Fuse, North Pole, Gingerbread Town) — not announced yet", status: "unconfirmed" },
   ] as { when: string; event: string; status: Status }[],
@@ -34,7 +34,7 @@ export const DB = {
     { method: "Stealing", how: "Walk into an unlocked base, grab a Brainrot and carry it home before getting hit." },
     { method: "Fuse Machine", how: "Put in 4 Brainrots for a random result. Seasonal versions: Witch, Santa, Divine, Summer, Haunted Fuse." },
     { method: "Craft / OG Craft / Cyber Craft", how: "Feed a set recipe of Brainrots to get a specific one (e.g. Los Dragons from OG Craft)." },
-    { method: "Bros Machine", how: "Added in update 75 (Nov 14, 2026) — combines Brainrots into “Bros” versions." },
+    { method: "Bros Machine", how: "Added in update 75 (Nov 14, 2026) — pair 2 specific Brainrots + a cash fee to craft a Secret “Bros”. New Bros added in update 76 (e.g. Timmy Bros = Grim Cheese + Tim Cheese)." },
     { method: "RNG Machine", how: "Roll randomized offers and claim them (was replaced by OG Craft in Sept 2026)." },
     { method: "Lucky Blocks", how: "Open for random Brainrots — bought with cash, Robux, or dropped in events (Spooky, Festive, Taco, Skull, Heart blocks…)." },
     { method: "Admin Abuse", how: "Sammy spawns rare Brainrots, gifts and server lotteries live on Saturdays and Taco Tuesday." },
@@ -127,6 +127,7 @@ export const DB = {
     { month: "2026-10", event: "Headless Merchant / Trick or Treat", update: 73 },
     { month: "2026-11", event: "Red Carpet: Balloon Baboon, Bling Luming", update: 74 },
     { month: "2026-11", event: "Bros Machine + buffs", update: 75 },
+    { month: "2026-11", event: "New Bros (Timmy, Kitsune…) + Hacker mutation", update: 76 },
   ] as { month: string; event: string; update?: number }[],
 
   rarities: [
@@ -144,8 +145,26 @@ export const DB = {
   mutations: [
     ["Default", "1×"], ["Gold", "1.25×"], ["Diamond", "1.5×"], ["Bloodrot", "2×"], ["Candy", "4×"], ["Lava", "6×"],
     ["Galaxy", "7×"], ["Yin Yang", "7.5×"], ["Radioactive", "8.5×"], ["Cursed", "9×"], ["Rainbow / Divine", "10×"],
-    ["Cyber", "11×"], ["Phantom", "12×"], ["Crystal", "13×"], ["Eclipse", "14×"],
+    ["Cyber", "11×"], ["Phantom", "12×"], ["Crystal", "13×"], ["Eclipse", "14×"], ["Hacker", "15× (reported)"],
   ].map(([name, note]) => ({ name: name!, note: `${note} income · one mutation per Brainrot` })) as Note[],
+
+  /** Bros Machine recipes: 2 Brainrots + cash fee → one Secret Bros. */
+  bros: [
+    { name: "Timmy Bros", recipe: "Grim Cheese + Tim Cheese", income: "New · update 76" },
+    { name: "Kitsune Bros", recipe: "Recipe not confirmed yet", income: "New · update 76" },
+    { name: "Tenini Ballini + Allesio Bros", recipe: "Tenini Ballini + Allesio (exact name not confirmed)", income: "New · update 76" },
+    { name: "Bear-in-fries Bros", recipe: "Bear inside french fries — recipe not confirmed yet", income: "New · update 76" },
+    { name: "Scary Bros", recipe: "Fishino Clownino + Scarino Crowino", income: "$230M/s · 1 h" },
+    { name: "Cabin Bros", recipe: "Lionello Casarello + Bearito Cabinito", income: "$205M/s · 1 h" },
+    { name: "Sammyni Bros", recipe: "Sammyni Fattini + Sammyni Cakini", income: "$177.5M/s · 45 min" },
+    { name: "Machine Bros", recipe: "La Fuse Machine + La Craft Machine", income: "$145M/s · 45 min" },
+    { name: "Scorpi Bros", recipe: "Scorpino Coasterino + Scorpi Inferni", income: "$110M/s · 30 min" },
+    { name: "Tic Bros", recipe: "Jolly Jolly Sahur + Spooky Spooky Sahur", income: "$94M/s · 30 min" },
+    { name: "Nacho Bros", recipe: "Nacho Spyder + Nachorilla", income: "$82.5M/s · 30 min" },
+    { name: "Tang Bros", recipe: "Tang Tang Keletang + Fang Fang Draculang", income: "$64M/s · 15 min" },
+    { name: "Spinny Bros", recipe: "Spinny Hammy + Lavadorito Spinito", income: "$61.5M/s · 15 min" },
+    { name: "Noobini Bros", recipe: "Noobini Pizzanini + Noobini Santanini", income: "$11M/s · 5 min" },
+  ] as { name: string; recipe: string; income: string }[],
 
   traits: [
     { name: "8×", note: "Strawberry" },

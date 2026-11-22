@@ -24,7 +24,8 @@ const RULES: Rule[] = [
   { test: /\bcodes?\b/, answer: () => (codes ? `${codes} (unconfirmed)` : "No known active codes") },
   { test: /\b(record|most players|peak|highest)\b/, answer: () => "25,868,678 players (Oct 11, 2025)" },
   { test: /\b(platforms?|console|xbox|playstation|ps5|mobile|phone)\b/, answer: () => "PC, Mac, mobile, PlayStation and Xbox" },
-  { test: /\b(best|highest|strongest|top) mutation\b/, answer: () => "Eclipse (14×)" },
+  { test: /\bhacker\b.*\bmutation\b|\bmutation\b.*\bhacker\b|\bhacker (multi|multiplier)\b/, answer: () => "15× (reported)" },
+  { test: /\b(best|highest|strongest|top|newest|latest|new) mutation\b/, answer: () => "Hacker (15×, reported)" },
   { test: /\b(best|highest|rarest|top) rarity\b/, answer: () => "OG" },
 ];
 
@@ -34,6 +35,8 @@ const NEEDS_WEB = /\b(leak|leaks|leaked|rumou?r|news|today|tonight|right now|liv
 export function quickAnswer(question: string): string | null {
   const q = question.toLowerCase().replace(/[’']/g, "'").replace(/\s+/g, " ").trim();
   if (!q || NEEDS_WEB.test(q)) return null;
+  const bro = DB.bros.find((b) => q.includes(b.name.toLowerCase()));
+  if (bro) return bro.recipe;
   for (const r of RULES) if (r.test.test(q)) return r.answer();
   return null;
 }

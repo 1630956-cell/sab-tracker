@@ -23,73 +23,121 @@ function Countdown({ label, target }: { label: string; target: Date }) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => { setNow(Date.now()); const i = setInterval(() => setNow(Date.now()), 1000); return () => clearInterval(i); }, []);
   const s = now == null ? 0 : Math.max(0, Math.floor((target.getTime() - now) / 1000));
-  const d = Math.floor(s / 86400), h = Math.floor((s % 86400) / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+  const parts = [["d", Math.floor(s / 86400)], ["h", Math.floor((s % 86400) / 3600)], ["m", Math.floor((s % 3600) / 60)], ["s", s % 60]] as const;
   return (
-    <div className="rounded-xl border border-border bg-card p-4">
+    <div className="surface p-5">
       <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div className="mt-1 font-mono text-2xl text-foreground tabular-nums">{now == null ? "--" : `${d}d ${h}h ${m}m ${sec}s`}</div>
+      <div className="mt-3 flex gap-2">
+        {parts.map(([u, v]) => (
+          <div key={u} className="flex-1 rounded-lg bg-secondary px-2 py-2 text-center">
+            <div className="font-mono text-2xl font-bold tabular-nums text-foreground">{now == null ? "--" : String(v).padStart(2, "0")}</div>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{u}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
 
+const TABS = [
+  { id: "updates", label: "Update log" },
+  { id: "database", label: "Database" },
+  { id: "sammy", label: "Sammy & the game" },
+  { id: "ask", label: "Ask AI" },
+] as const;
+type Tab = (typeof TABS)[number]["id"];
+
 function Home() {
   const { data } = useSuspenseQuery(statsQuery);
   const [q, setQ] = useState("");
-  const [tab, setTab] = useState<"updates" | "database" | "sammy" | "ask">("updates");
+  const [tab, setTab] = useState<Tab>("updates");
   const list = useMemo(() => UPDATES.filter((u) => (u.title + u.items.join(" ") + u.n).toLowerCase().includes(q.toLowerCase())), [q]);
   const nextUpdate = useMemo(() => nextET(6, 15), []);
   const nextTaco = useMemo(() => nextET(2, 18), []);
   const latest = UPDATES[0]!;
+  const newBros = DB.bros.filter((b) => b.income.startsWith("New"));
+  const newest = DB.mutations[DB.mutations.length - 1]!;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="mx-auto flex max-w-5xl items-center justify-between px-5 py-5">
-        <div className="text-lg font-bold tracking-tight">🧠 {BRAND.name}</div>
-        <a href={GAME.url} target="_blank" rel="noreferrer" className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground">Play game</a>
-      </header>
+    <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-spotlight" />
+      <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-grid" />
 
-      <main className="mx-auto max-w-5xl space-y-6 px-5 pb-16">
-        <section className="rounded-2xl border border-border bg-card p-6">
+      <div className="sticky top-3 z-20 mt-3 px-4 sm:px-5">
+      <header className="mx-auto flex max-w-5xl items-center justify-between rounded-2xl px-4 py-2.5 glass-bar">
+        <div className="flex items-center gap-2 text-base font-bold tracking-tight">
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-brand shadow-glow">🧠</span>
+          {BRAND.name}
+        </div>
+        <a href={GAME.url} target="_blank" rel="noreferrer" className="rounded-lg bg-gradient-brand px-3.5 py-1.5 text-sm font-semibold text-primary-foreground shadow-glow transition hover:brightness-110">Play game ↗</a>
+      </header>
+      </div>
+
+      <main className="relative mx-auto max-w-5xl space-y-5 px-4 pb-16 pt-8 sm:px-5">
+        <section className="surface animate-fade-up p-6 sm:p-8">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="relative flex h-2.5 w-2.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75" /><span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-primary" /></span>
+            <span className="relative flex h-2.5 w-2.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success opacity-75" /><span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-success" /></span>
             Live players in {GAME.name} · refreshes every 30s
           </div>
-          <div className="mt-2 font-mono text-5xl font-bold tabular-nums sm:text-6xl">{fmt(data.playing)}</div>
+          <div className="mt-2 font-mono text-5xl font-bold tabular-nums text-gradient sm:text-7xl">{fmt(data.playing)}</div>
           {data.error && <p className="mt-2 text-sm text-destructive">{data.error}</p>}
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-            <div><div className="text-muted-foreground">Total visits</div><div className="font-semibold">{fmt(data.visits)}</div></div>
-            <div><div className="text-muted-foreground">Favorites</div><div className="font-semibold">{fmt(data.favorites)}</div></div>
-            <div><div className="text-muted-foreground">Last game update</div><div className="font-semibold">{data.updated ? new Date(data.updated).toLocaleString() : "—"}</div></div>
+          <div className="mt-6 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+            {[["Total visits", fmt(data.visits)], ["Favorites", fmt(data.favorites)], ["Last game update", data.updated ? new Date(data.updated).toLocaleString() : "—"]].map(([k, v]) => (
+              <div key={k} className="rounded-xl bg-secondary px-3 py-2.5"><div className="text-xs text-muted-foreground">{k}</div><div className="mt-0.5 font-semibold">{v}</div></div>
+            ))}
           </div>
         </section>
 
-        <section className="grid gap-3 sm:grid-cols-2">
-          <Countdown label="Next Saturday update + Admin Abuse (3 PM ET)" target={nextUpdate} />
-          <Countdown label="Taco Tuesday Admin Abuse (6 PM ET)" target={nextTaco} />
+        <section className="grid gap-4 sm:grid-cols-2">
+          <Countdown label="Next Saturday update + Admin Abuse · 3 PM ET" target={nextUpdate} />
+          <Countdown label="Taco Tuesday Admin Abuse · 6 PM ET" target={nextTaco} />
         </section>
 
-        <section className="rounded-2xl border border-primary/40 bg-card p-6">
-          <div className="text-xs uppercase tracking-wider text-primary">Latest update · #{latest.n} · {latest.date}</div>
-          <h2 className="mt-1 text-2xl font-bold">{latest.title}</h2>
-          <ul className="mt-3 grid gap-1 text-sm text-muted-foreground sm:grid-cols-2">{latest.items.map((i) => <li key={i}>• {i}</li>)}</ul>
+        <section className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+          <div className="surface relative overflow-hidden p-6">
+            <div aria-hidden className="pointer-events-none absolute -right-16 -top-16 h-48 w-48 rounded-full bg-primary/30 blur-3xl" />
+            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary-glow">
+              <span className="rounded bg-gradient-brand px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">NEW</span>
+              Update #{latest.n} · {latest.date}
+            </div>
+            <h2 className="mt-2 text-2xl font-bold">{latest.title}</h2>
+            <ul className="mt-3 grid gap-1.5 text-sm text-muted-foreground">{latest.items.map((i) => <li key={i} className="flex gap-2"><span className="text-primary-glow">▸</span>{i}</li>)}</ul>
+          </div>
+          <div className="surface p-6">
+            <div className="text-xs uppercase tracking-wider text-muted-foreground">Newest mutation</div>
+            <div className="mt-1 text-3xl font-bold text-gradient">{newest.name}</div>
+            <div className="text-sm text-muted-foreground">{newest.note.split(" · ")[0]}</div>
+            <div className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">New Bros recipes</div>
+            <ul className="mt-2 space-y-2 text-sm">
+              {newBros.map((b) => (
+                <li key={b.name} className="rounded-lg bg-secondary px-3 py-2">
+                  <div className="font-medium">{b.name}</div>
+                  <div className="text-xs text-muted-foreground">{b.recipe}</div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
 
         <IncomingPanel />
 
-        <nav className="flex flex-wrap gap-2">
-          {(["updates", "database", "sammy", "ask"] as const).map((t) => (
-            <button key={t} onClick={() => setTab(t)} className={`rounded-lg px-4 py-2 text-sm font-medium ${tab === t ? "bg-primary text-primary-foreground" : "bg-secondary text-secondary-foreground"}`}>
-              {t === "updates" ? "Update log" : t === "database" ? "Database" : t === "sammy" ? "Sammy & the game" : "Ask AI (live web)"}
+        <nav className="flex flex-wrap gap-1 rounded-2xl p-1 glass-bar">
+          {TABS.map((t) => (
+            <button key={t.id} onClick={() => setTab(t.id)} className={`flex-1 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-medium transition ${tab === t.id ? "bg-gradient-brand text-primary-foreground shadow-glow" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}>
+              {t.label}
             </button>
           ))}
         </nav>
 
         {tab === "updates" && (
           <section className="space-y-3">
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search updates, Brainrots, events…" className="w-full rounded-lg border border-input bg-background px-4 py-2.5 text-sm outline-none focus:border-primary" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search updates, Brainrots, events…" className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none transition focus:border-primary focus:shadow-glow" />
             {list.map((u) => (
-              <article key={u.n} className="rounded-xl border border-border bg-card p-4">
-                <div className="flex items-baseline justify-between"><h3 className="font-semibold">#{u.n} · {u.title}</h3><span className="text-xs text-muted-foreground">{u.date}</span></div>
+              <article key={u.n} className="surface animate-rise p-5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <h3 className="font-semibold"><span className="mr-2 font-mono text-primary-glow">#{u.n}</span>{u.title}</h3>
+                  <span className="shrink-0 text-xs text-muted-foreground">{u.date}</span>
+                </div>
                 <ul className="mt-2 space-y-0.5 text-sm text-muted-foreground">{u.items.map((i) => <li key={i}>• {i}</li>)}</ul>
               </article>
             ))}
@@ -99,15 +147,15 @@ function Home() {
 
         {tab === "sammy" && (
           <section className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-xl border border-border bg-card p-5">
+            <div className="surface p-5">
               <h3 className="text-lg font-bold">{SAMMY.display} (@{SAMMY.handle})</h3>
-              <a className="text-sm text-primary" href={`https://www.roblox.com/users/${SAMMY.userId}/profile`} target="_blank" rel="noreferrer">Roblox profile ↗</a>
+              <a className="text-sm text-primary-glow" href={`https://www.roblox.com/users/${SAMMY.userId}/profile`} target="_blank" rel="noreferrer">Roblox profile ↗</a>
               <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">{SAMMY.facts.map((f) => <li key={f}>• {f}</li>)}</ul>
             </div>
-            <div className="rounded-xl border border-border bg-card p-5">
+            <div className="surface p-5">
               <h3 className="text-lg font-bold">{GAME.name}</h3>
               <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">{SAMMY.gameFacts.map((f) => <li key={f}>• {f}</li>)}</ul>
-              <div className="mt-4 space-y-1 font-mono text-xs text-muted-foreground">
+              <div className="mt-4 space-y-1 rounded-lg bg-secondary p-3 font-mono text-xs text-muted-foreground">
                 <div>Place ID: {GAME.placeId}</div><div>Universe ID: {GAME.universeId}</div><div>Group: {GAME.groupName} ({GAME.groupId})</div>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">Only the game with these IDs is official — anything else is a copy.</p>
@@ -119,6 +167,10 @@ function Home() {
 
         {tab === "ask" && <AskPanel />}
       </main>
+
+      <footer className="border-t border-border py-6 text-center text-xs text-muted-foreground">
+        {BRAND.name} · fan-made, not affiliated with Roblox or {GAME.groupName}
+      </footer>
     </div>
   );
 }
@@ -137,11 +189,11 @@ function AskPanel() {
     setOut(r.error ?? r.text); setLoading(false);
   }
   return (
-    <section className="space-y-3 rounded-xl border border-border bg-card p-5">
-      <div className="flex flex-wrap gap-2">{presets.map((p) => <button key={p} onClick={() => { setPrompt(p); run(p); }} className="rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground">{p}</button>)}</div>
-      <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} className="w-full rounded-lg border border-input bg-background p-3 text-sm outline-none focus:border-primary" />
-      <button disabled={loading} onClick={() => run()} className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50">{loading ? "Searching the web…" : "Ask"}</button>
-      {out && <div className="whitespace-pre-wrap rounded-lg bg-background p-4 text-sm">{out}</div>}
+    <section className="surface space-y-3 p-5">
+      <div className="flex flex-wrap gap-2">{presets.map((p) => <button key={p} onClick={() => { setPrompt(p); run(p); }} className="rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground transition hover:bg-accent">{p}</button>)}</div>
+      <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} className="w-full rounded-xl border border-input bg-background p-3 text-sm outline-none transition focus:border-primary focus:shadow-glow" />
+      <button disabled={loading} onClick={() => run()} className="rounded-lg bg-gradient-brand px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:brightness-110 disabled:opacity-50">{loading ? "Searching the web…" : "Ask"}</button>
+      {out && <div className="animate-rise whitespace-pre-wrap rounded-xl border border-primary/40 bg-background p-4 text-base font-medium">{out}</div>}
     </section>
   );
 }
@@ -156,10 +208,10 @@ function IncomingPanel() {
     setOut(r.error ?? r.text); setLoading(false);
   }
   return (
-    <section className="rounded-2xl border border-border bg-card p-6">
+    <section className="surface p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-bold">Incoming updates</h2>
-        <button disabled={loading} onClick={check} className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground disabled:opacity-50">{loading ? "Checking the web…" : "Check latest leaks (AI)"}</button>
+        <button disabled={loading} onClick={check} className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground transition hover:bg-accent disabled:opacity-50">{loading ? "Checking the web…" : "Check latest leaks (AI)"}</button>
       </div>
       <ul className="mt-3 divide-y divide-border">
         {DB.upcoming.map((u) => (
