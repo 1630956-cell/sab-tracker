@@ -8,6 +8,10 @@ import { askGemini, getLiveStats } from "@/lib/game.functions";
 import { DatabasePanel } from "@/components/DatabasePanel";
 import { DB } from "@/lib/brainrot-db";
 import { quickAnswer } from "@/lib/quick-answers";
+import { guard, RepeatTracker } from "@/lib/abuse-guard";
+import { CodexPanel } from "@/components/CodexPanel";
+
+const clientTracker = new RepeatTracker();
 
 const statsQuery = queryOptions({ queryKey: ["live"], queryFn: () => getLiveStats(), staleTime: 25_000, refetchInterval: 30_000 });
 
@@ -41,6 +45,7 @@ function Countdown({ label, target }: { label: string; target: Date }) {
 
 const TABS = [
   { id: "updates", label: "Update log" },
+  { id: "codex", label: "Brainrot Codex" },
   { id: "database", label: "Database" },
   { id: "sammy", label: "Sammy & the game" },
   { id: "ask", label: "Ask AI" },
@@ -163,6 +168,7 @@ function Home() {
           </section>
         )}
 
+        {tab === "codex" && <CodexPanel />}
         {tab === "database" && <DatabasePanel />}
 
         {tab === "ask" && <AskPanel />}
@@ -182,6 +188,8 @@ function AskPanel() {
   const [loading, setLoading] = useState(false);
   const presets = ["What's the newest update?", "What events are coming next?", "Latest news about SpyderSammy", "When is the next update and what's leaked?", "Any active codes?"];
   async function run(p = prompt) {
+    const refused = guard(p, clientTracker);
+    if (refused) { setOut(refused); return; }
     const quick = quickAnswer(p);
     if (quick) { setOut(quick); return; }
     setLoading(true); setOut(null);

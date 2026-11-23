@@ -34,3 +34,4 @@ use the editor.
 - Game facts and the seed update log live in `src/lib/game-data.ts`; the preset knowledge base (Sammy, obtain methods, timeline, mutations, codes) lives in `src/lib/brainrot-db.ts`; live data (player count, AI web answers via Lovable AI Gateway with google_search) comes from server functions in `src/lib/game.functions.ts` — keeps keys server-side.
 - The app is dark-only; colors are oklch tokens in `src/styles.css` — no light theme to maintain.
 - Obvious questions are answered instantly from preset data in `src/lib/quick-answers.ts` (client and server) before any AI call — saves credits and wait time; news/leaks always go to the AI.
+- The AI abuse filter (`src/lib/abuse-guard.ts`) runs before quick answers and the AI, on client and server; the server also caches answers per normalized question — protects AI credits. The Codex tab data in `src/lib/codex-data.ts` is generated from the user's database bundle — regenerate rather than hand-edit.

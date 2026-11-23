@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { GAME } from "./game-data";
 import { quickAnswer } from "./quick-answers";
+import { guard, normalize, RepeatTracker } from "./abuse-guard";
+
+const tracker = new RepeatTracker();
+const answerCache = new Map<string, { text: string; at: number }>();
 
 export const getLiveStats = createServerFn({ method: "GET" }).handler(async () => {
   try {
@@ -18,8 +22,18 @@ export const getLiveStats = createServerFn({ method: "GET" }).handler(async () =
 export const askGemini = createServerFn({ method: "POST" })
   .inputValidator((d: { prompt: string }) => ({ prompt: String(d.prompt).slice(0, 2000) }))
   .handler(async ({ data }) => {
+    let who = "anon";
+    try {
+      const { getRequestHeader } = await import("@tanstack/react-start/server");
+      who = getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "anon";
+    } catch { /* no request context */ }
+    const refused = guard(data.prompt, tracker, who);
+    if (refused) return { text: refused, error: null };
     const quick = quickAnswer(data.prompt);
     if (quick) return { text: quick, error: null };
+    const ck = normalize(data.prompt);
+    const cached = answerCache.get(ck);
+    if (cached && Date.now() - cached.at < 15 * 60 * 1000) return { text: cached.text, error: null };
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { text: null, error: "AI is not set up for this app yet." };
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -62,5 +76,8 @@ export const askGemini = createServerFn({ method: "POST" })
         } catch { /* partial frame */ }
       }
     }
-    return { text: text.replace(/\*\*|__|^[*-]\s+/gm, "").trim() || "No answer.", error: null };
+    const final = text.replace(/\*\*|__|^[*-]\s+/gm, "").trim() || "No answer.";
+    if (answerCache.size > 2000) answerCache.clear();
+    answerCache.set(ck, { text: final, at: Date.now() });
+    return { text: final, error: null };
   });
