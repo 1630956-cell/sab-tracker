@@ -127,8 +127,17 @@ export const DB = {
     { month: "2026-10", event: "Headless Merchant / Trick or Treat", update: 73 },
     { month: "2026-11", event: "Red Carpet: Balloon Baboon, Bling Luming", update: 74 },
     { month: "2026-11", event: "Bros Machine + buffs", update: 75 },
-    { month: "2026-11", event: "Timmy Bros, Kitsune, bear in french fries + Hacker mutation", update: 76 },
+    { month: "2026-11", event: "Kitsune, Papafrito, Puffin Muffin, Timmy Bros, Ball Bros + Hacker mutation", update: 76 },
   ] as { month: string; event: string; update?: number }[],
+
+  /** Brainrots added in the newest update (from the user's database). */
+  newest: [
+    { name: "Kitsune", note: "Secret · $240M/s · DLC" },
+    { name: "Papafrito", note: "Secret · $105M/s · DLC (bear in french fries)" },
+    { name: "Puffin Muffin", note: "Brainrot God · $324.5K/s · DLC" },
+    { name: "Ball Bros", note: "Secret · $125M/s · Bros Machine (Tenini Ballini + Allesio)" },
+    { name: "Timmy Bros", note: "Secret · $7.25M/s · Bros Machine (Grim Cheese + Tim Cheese)" },
+  ] as Note[],
 
   rarities: [
     { name: "Common", note: "Cheapest, lowest income" },
@@ -150,8 +159,8 @@ export const DB = {
 
   /** Bros Machine recipes: 2 Brainrots + cash fee → one Secret Bros. */
   bros: [
-    { name: "Timmy Bros", recipe: "Grim Cheese + Tim Cheese", income: "New · update 76" },
-    { name: "Tenini Ballini + Allesio combo", recipe: "Tenini Ballini + Allesio", income: "New · update 76" },
+    { name: "Timmy Bros", recipe: "Grim Cheese + Tim Cheese", income: "New · update 76 · $7.25M/s" },
+    { name: "Ball Bros", recipe: "Tenini Ballini + Allesio", income: "New · update 76 · $125M/s" },
     { name: "Scary Bros", recipe: "Fishino Clownino + Scarino Crowino", income: "$230M/s · 1 h" },
     { name: "Cabin Bros", recipe: "Lionello Casarello + Bearito Cabinito", income: "$205M/s · 1 h" },
     { name: "Sammyni Bros", recipe: "Sammyni Fattini + Sammyni Cakini", income: "$177.5M/s · 45 min" },

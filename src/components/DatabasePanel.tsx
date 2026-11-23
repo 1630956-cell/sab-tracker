@@ -11,6 +11,7 @@ function monthLabel(ym: string) {
 }
 
 const SECTIONS: Section[] = [
+  { id: "newest", title: "New Brainrots — update 76", rows: DB.newest.map((n) => ({ a: n.name, b: n.note, tag: "new" })) },
   { id: "upcoming", title: "Coming up", rows: DB.upcoming.map((u) => ({ a: u.when, b: u.event, tag: u.status })) },
   { id: "sammy", title: "Sammy — everything known", rows: DB.sammy.map((s) => ({ a: s.label, b: s.value })) },
   { id: "obtain", title: "Every way to get a Brainrot", rows: DB.obtain.map((o) => ({ a: o.method, b: o.how })) },
