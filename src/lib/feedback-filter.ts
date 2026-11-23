@@ -38,12 +38,35 @@ const BLOCKED: string[] = [
 /** Ordinary profanity: allowed, masked in the stored copy. */
 const SOFT: string[] = ["fuck", "shit", "bitch", "cunt", "asshole", "bastard", "dick", "piss", "whore", "slut"];
 
+/** Innocent words that contain a short slur as a prefix or substring. */
+const ALLOW = new Set(["spices", "spicy", "suspicious", "suspicion", "retardant", "retardants", "auspicious", "chinking", "chinked"]);
+
 /** Threats aimed at a person — blocked even without a slur. */
 const THREATS = [
-  /i (will|am going to|ma going to) (kill|hurt|stab|shoot|dox)/,
-  /kill (yourself|urself|your family)/,
-  /dox(x)? (him|her|them|you)/,
+  /i\s*(will|am going to|ma going to)\s*(kill|hurt|stab|shoot|dox)/,
+  /kill\s*(yourself|urself|your family)/,
+  /dox(x)?\s*(him|her|them|you)/,
 ];
+
+const TOKEN_SPLIT = /[^a-z0-9@$!]+/i;
+
+/**
+ * True when the text actually contains the term as a word (or the whole message
+ * IS the term). Short terms must match exactly so "spices" doesn't trip "spic";
+ * longer terms may be prefixed so "retarded" catches "retard".
+ */
+function containsTerm(text: string, term: string): boolean {
+  const target = normalize(term);
+  const flat = normalize(text);
+  if (!flat) return false;
+  if (flat === target) return true;
+  const tokens = text.toLowerCase().split(TOKEN_SPLIT).map(normalize).filter(Boolean);
+  return tokens.some((tok) => {
+    if (ALLOW.has(tok)) return false;
+    if (tok === target) return true;
+    return target.length >= 6 && tok.startsWith(target);
+  });
+}
 
 export type ScreenResult = {
   ok: boolean;
@@ -57,11 +80,13 @@ export function screenMessage(raw: string): ScreenResult {
   const text = raw.trim();
   const flat = normalize(text);
 
-  const slur = BLOCKED.find((w) => flat.includes(normalize(w)));
+  // "spic and span" is an ordinary phrase, not the slur.
+  const phraseSafe = /\bspic\s+(and|n)\s+span\b/i.test(text);
+  const slur = phraseSafe ? undefined : BLOCKED.find((w) => containsTerm(text, w));
   if (slur) {
     return { ok: false, reason: "That message contains a slur, so it can't be sent. Reword it and try again.", cleaned: text };
   }
-  if (THREATS.some((re) => re.test(text.toLowerCase()))) {
+  if (THREATS.some((re) => re.test(text.toLowerCase().replace(/\s+/g, " ")))) {
     return { ok: false, reason: "That reads as a threat against a person. Reports about the game are fine — threats aren't.", cleaned: text };
   }
 
