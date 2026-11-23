@@ -11,6 +11,7 @@ const latest = UPDATES[0]!;
 const codes = DB.codes.filter((c) => c.status !== "expired").map((c) => c.code).join(", ");
 
 const RULES: Rule[] = [
+  { test: /\bcannelloni\b|hydra\s+dragon/, answer: () => "Hydra Dragon Cannelloni — Secret · $300M/s (formerly $350M/s) · cost $300B (formerly $350B) · Unobtainable (Fuse Machine)" },
   { test: /\bcats?\b|\bpet\b/, answer: () => "Nova" },
   { test: /(roblox )?(user ?name|handle|@)\b.*(sammy|owner|creator|dev)|(sammy|owner|creator).*(user ?name|handle)/, answer: () => `@${SAMMY.handle}` },
   { test: /(studio|company)/, answer: () => "Do Big Studios" },
