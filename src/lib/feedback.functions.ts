@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { screenMessage } from "./feedback-filter";
 
-export type FeedbackInput = { category: string; message: string; page?: string };
+export type FeedbackInput = { category: string; message: string; page?: string; public?: boolean };
+export type PublicItem = { id: number; title: string; category: string; body: string; state: string; comments: number; createdAt: string; url: string };
 export type FeedbackResult = { delivered: boolean; via: "webhook" | "github" | "none"; error: string | null; reason: string | null };
 
 const CATEGORIES = new Set(["Bug", "Wrong data", "Suggestion", "Missing content", "Other"]);
@@ -24,6 +25,7 @@ export const submitFeedback = createServerFn({ method: "POST" })
     category: String(d.category ?? "Other").slice(0, 40),
     message: String(d.message ?? "").slice(0, 1200),
     page: String(d.page ?? "").slice(0, 200),
+    public: Boolean(d.public),
   }))
   .handler(async ({ data }): Promise<FeedbackResult> => {
     if (!CATEGORIES.has(data.category)) return { delivered: false, via: "none", error: null, reason: "Pick a category first." };
@@ -45,23 +47,11 @@ export const submitFeedback = createServerFn({ method: "POST" })
     const body = { category: data.category, message: checked.cleaned, page: data.page, at: new Date().toISOString() };
 
     const webhook = process.env["FEEDBACK_WEBHOOK_URL"];
-    if (webhook) {
-      try {
-        const r = await fetch(webhook, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: `[${data.category}] ${checked.cleaned}\n— ${data.page || "unknown page"}` }),
-        });
-        if (r.ok) return { delivered: true, via: "webhook", error: null, reason: null };
-        return { delivered: false, via: "none", error: `Webhook returned ${r.status}`, reason: null };
-      } catch {
-        return { delivered: false, via: "none", error: "Could not reach the webhook.", reason: null };
-      }
-    }
-
     const token = process.env["GITHUB_TOKEN"];
     const repo = process.env["GITHUB_REPO"];
-    if (token && repo) {
+
+    const postToGithub = async (): Promise<FeedbackResult | null> => {
+      if (!token || !repo) return null;
       try {
         const r = await fetch(`https://api.github.com/repos/${repo}/issues`, {
           method: "POST",
@@ -77,7 +67,63 @@ export const submitFeedback = createServerFn({ method: "POST" })
       } catch {
         return { delivered: false, via: "none", error: "Could not reach GitHub.", reason: null };
       }
+    };
+
+    // Public suggestions go to GitHub issues so everyone can read them.
+    if (data.public) {
+      const viaGithub = await postToGithub();
+      if (viaGithub) return viaGithub;
     }
+
+    if (webhook) {
+      try {
+        const r = await fetch(webhook, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: `[${data.category}] ${checked.cleaned}\n— ${data.page || "unknown page"}` }),
+        });
+        if (r.ok) return { delivered: true, via: "webhook", error: null, reason: null };
+        return { delivered: false, via: "none", error: `Webhook returned ${r.status}`, reason: null };
+      } catch {
+        return { delivered: false, via: "none", error: "Could not reach the webhook.", reason: null };
+      }
+    }
+
+    // No webhook: fall back to a GitHub issue even for private reports.
+    const fallback = await postToGithub();
+    if (fallback) return fallback;
 
     return { delivered: false, via: "none", error: null, reason: "not-configured" };
   });
+
+/** Public feed: every issue labelled "feedback". Reads are anonymous, so no token is needed. */
+export const listPublicFeedback = createServerFn({ method: "GET" }).handler(async (): Promise<PublicItem[]> => {
+  const repo = process.env["GITHUB_REPO"] ?? "1630956-cell/sab-tracker";
+  try {
+    const r = await fetch(`https://api.github.com/repos/${repo}/issues?labels=feedback&state=all&per_page=30&sort=created&direction=desc`, {
+      headers: { Accept: "application/vnd.github+json" },
+    });
+    if (!r.ok) return [];
+    const rows = (await r.json()) as Array<{
+      number: number; title: string; body: string | null; state: string; comments: number; created_at: string; html_url: string; pull_request?: unknown;
+    }>;
+    return rows
+      .filter((x) => !x.pull_request)
+      .map((x) => {
+        const bodyText = (x.body ?? "").split("\n---\n")[0] ?? "";
+        const cat = /^\[([^\]]+)\]/.exec(x.title)?.[1] ?? "Other";
+        return {
+          id: x.number,
+          title: x.title.replace(/^\[[^\]]+\]\s*/, ""),
+          category: cat,
+          body: bodyText,
+          state: x.state,
+          comments: x.comments,
+          createdAt: x.created_at,
+          url: x.html_url,
+        };
+      });
+  } catch {
+    return [];
+  }
+});
