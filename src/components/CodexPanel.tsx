@@ -72,7 +72,7 @@ export function CodexPanel() {
                   <span className="font-mono text-lg font-bold text-gradient">{u[2] || "—"}</span>
                   {u[6] != null && <span className="font-mono text-xs text-muted-foreground">{fmt(u[6])} exist</span>}
                 </div>
-                <MutationToggle perSec={u[3]} />
+                <MutationToggle perSec={u[3]} unitName={u[0]} />
                 {u[4] && <p className="line-clamp-2 text-xs text-muted-foreground">{u[4]}</p>}
                 {u[5] && <p className="mt-auto text-[11px] text-muted-foreground/70">Added {u[5]}</p>}
               </article>
