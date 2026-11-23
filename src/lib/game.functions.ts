@@ -4,7 +4,6 @@ import { quickAnswer } from "./quick-answers";
 import { guard, normalize, RepeatTracker } from "./abuse-guard";
 
 const tracker = new RepeatTracker();
-const answerCache = new Map<string, { text: string; at: number }>();
 
 export const getLiveStats = createServerFn({ method: "GET" }).handler(async () => {
   try {
@@ -31,9 +30,6 @@ export const askGemini = createServerFn({ method: "POST" })
     if (refused) return { text: refused, error: null };
     const quick = quickAnswer(data.prompt);
     if (quick) return { text: quick, error: null };
-    const ck = normalize(data.prompt);
-    const cached = answerCache.get(ck);
-    if (cached && Date.now() - cached.at < 15 * 60 * 1000) return { text: cached.text, error: null };
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { text: null, error: "AI is not set up for this app yet." };
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -49,6 +45,7 @@ export const askGemini = createServerFn({ method: "POST" })
 Sammy (@SpyderSammy) is the owner and creator of Steal a Brainrot. He is the central person in this game; Sammy means SpyderSammy unless the question clearly means someone else. Never claim that his real name is confirmed unless explicitly asked and use only verified or clearly labeled community information.
 For every question about Steal a Brainrot, prioritize information about Sammy, his role, leadership, updates, Admin Abuse, game development, and decisions. If the question asks about the owner or creator, answer with Sammy. If the question is not about Steal a Brainrot or Sammy, answer normally and do not force a connection.
 Known facts: his cat is Nova; the newest update is 76 (Nov 21, 2026): Hacker mutation (reported 15×) and new Bros Machine Bros including Timmy Bros and Ball Bros. Search the web only if newer information is needed.
+The user’s personal name and favorite Brainrots or mutations are not known unless the user tells you in this conversation. Never guess them; politely say they have not shared that information yet.
 Reply with ONLY the answer itself—a few words or one short sentence. No intro, no explanation, no lists, no markdown.` },
           { role: "user", content: data.prompt },
         ],
@@ -81,7 +78,5 @@ Reply with ONLY the answer itself—a few words or one short sentence. No intro,
       }
     }
     const final = text.replace(/\*\*|__|^[-*]\s+/gm, "").trim() || "No answer.";
-    if (answerCache.size > 2000) answerCache.clear();
-    answerCache.set(ck, { text: final, at: Date.now() });
     return { text: final, error: null };
   });
