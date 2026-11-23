@@ -46,3 +46,24 @@ export function money(n: number): string {
   }
   return `$${Math.round(n)}`;
 }
+
+/** Admin Abuse traits. Multipliers verified against the wiki trait list. */
+export type TraitDef = { name: string; multiplier: number; source: string };
+
+export const TRAITS: TraitDef[] = [
+  { name: "Strawberry", multiplier: 8, source: "Admin Abuse · Strawberry event" },
+  { name: "Meowl", multiplier: 7, source: "Admin Abuse · Meowl event" },
+  { name: "John Pork", multiplier: 6.5, source: "Admin Abuse · 'is calling'" },
+  { name: "Skibidi", multiplier: 6, source: "Admin Abuse · Skibidi heads" },
+  { name: "Granny", multiplier: 5.5, source: "Granny funeral event" },
+  { name: "Food", multiplier: 5.5, source: "Food event" },
+  { name: "Paint", multiplier: 5, source: "Chicleteira ritual" },
+  { name: ":3", multiplier: 4.5, source: "Mi Gatito ritual" },
+  { name: "Tie", multiplier: 3.75, source: "Dul Dul Dul ritual" },
+  { name: "Matteo Hat", multiplier: 3.5, source: "Matteo ritual" },
+  { name: "Spider", multiplier: 3.5, source: "Sammyni Spyderini ritual" },
+  { name: "Shark Fin", multiplier: 3, source: "Orcalero Orcala ritual" },
+  { name: "Explosive", multiplier: 3, source: "Bombardiro Crocodilo ritual" },
+  { name: "Galactic", multiplier: 3, source: "La Vacca Saturno ritual" },
+  { name: "Sleepy", multiplier: 0.5, source: "Admin Abuse · HARMFUL, halves value" },
+];
