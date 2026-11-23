@@ -10,9 +10,9 @@ export const getLiveStats = createServerFn({ method: "GET" }).handler(async () =
   try {
     const r = await fetch(`https://games.roblox.com/v1/games?universeIds=${GAME.universeId}`);
     if (!r.ok) return { error: `Roblox returned ${r.status}`, playing: null, visits: null, favorites: null, updated: null };
-    const j = (await r.json()) as { data?: { playing: number; visits: number; favoritedCount: number; updated: string }[] };
+    const j = (await r.json()) as { data?: { playing: number; visits: number; favoriteCount: number; updated: string }[] };
     const g = j.data?.[0];
-    return { error: null, playing: g?.playing ?? null, visits: g?.visits ?? null, favorites: g?.favoritedCount ?? null, updated: g?.updated ?? null };
+    return { error: null, playing: g?.playing ?? null, visits: g?.visits ?? null, favorites: g?.favoriteCount ?? null, updated: g?.updated ?? null };
   } catch {
     return { error: "Could not reach Roblox", playing: null, visits: null, favorites: null, updated: null };
   }
@@ -38,14 +38,18 @@ export const askGemini = createServerFn({ method: "POST" })
     if (!key) return { text: null, error: "AI is not set up for this app yet." };
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AIG-SDK": "fetch" },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AI-SDK": "fetch" },
       body: JSON.stringify({
         model: "google/gemini-3.8-flash",
         stream: true,
         reasoning_effort: "low",
         tools: [{ type: "google_search" }],
         messages: [
-          { role: "system", content: `You are a Steal a Brainrot (Roblox) expert. Today is ${new Date().toDateString()}. Known facts: the owner/creator is Sammy (@SpyderSammy) — just call him Sammy and never mention his real name unless explicitly asked; his cat is named Nova; the newest update is 76 (Nov 21, 2026): Hacker mutation (15×, reported) and new Bros Machine Bros like Timmy Bros (Grim Cheese + Tim Cheese). Search the web only if needed for newer info. Reply with ONLY the answer itself — a few words or one short sentence. No intro, no explanation, no lists, no markdown. Add (unconfirmed) only for leaks or rumors.` },
+          { role: "system", content: `You are an expert on Steal a Brainrot (Roblox). Today is ${new Date().toDateString()}.
+Sammy (@SpyderSammy) is the owner and creator of Steal a Brainrot. He is the central person in this game; Sammy means SpyderSammy unless the question clearly means someone else. Never claim that his real name is confirmed unless explicitly asked and use only verified or clearly labeled community information.
+For every question about Steal a Brainrot, prioritize information about Sammy, his role, leadership, updates, Admin Abuse, game development, and decisions. If the question asks about the owner or creator, answer with Sammy. If the question is not about Steal a Brainrot or Sammy, answer normally and do not force a connection.
+Known facts: his cat is Nova; the newest update is 76 (Nov 21, 2026): Hacker mutation (reported 15×) and new Bros Machine Bros including Timmy Bros and Ball Bros. Search the web only if newer information is needed.
+Reply with ONLY the answer itself—a few words or one short sentence. No intro, no explanation, no lists, no markdown.` },
           { role: "user", content: data.prompt },
         ],
       }),
@@ -53,7 +57,7 @@ export const askGemini = createServerFn({ method: "POST" })
     if (!r.ok || !r.body) {
       const body = await r.text().catch(() => "");
       if (r.status === 402) return { text: null, error: "Out of AI credits for now — try again after credits reset." };
-      if (r.status === 429) return { text: null, error: "Too many questions right now — wait a moment and try again." };
+      if (r.status === 429) return { text: "Too many questions right now — wait a moment and try again.", error: null };
       return { text: null, error: `AI error ${r.status}: ${body.slice(0, 300)}` };
     }
     const reader = r.body.getReader();
@@ -63,7 +67,7 @@ export const askGemini = createServerFn({ method: "POST" })
       const { done, value } = await reader.read();
       if (done) break;
       buf += dec.decode(value, { stream: true });
-      let i: number;
+      let i;
       while ((i = buf.indexOf("\n")) >= 0) {
         const line = buf.slice(0, i).trim();
         buf = buf.slice(i + 1);
@@ -76,7 +80,7 @@ export const askGemini = createServerFn({ method: "POST" })
         } catch { /* partial frame */ }
       }
     }
-    const final = text.replace(/\*\*|__|^[*-]\s+/gm, "").trim() || "No answer.";
+    const final = text.replace(/\*\*|__|^[-*]\s+/gm, "").trim() || "No answer.";
     if (answerCache.size > 2000) answerCache.clear();
     answerCache.set(ck, { text: final, at: Date.now() });
     return { text: final, error: null };
