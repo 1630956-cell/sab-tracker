@@ -36,14 +36,18 @@ export function CodexPanel() {
   }, [s, rarity, sort, view]);
 
   const top = UNITS.reduce((a, b) => (b[3] > a[3] ? b : a));
-  const rarest = UNITS.filter((u) => u[6] != null).reduce((a, b) => ((b[6] ?? 1e9) < (a[6] ?? 1e9) ? b : a));
+  // Only rank units we can corroborate: a published count AND a recorded income.
+  // Rows with no income come from trackers without wiki backing and can carry junk
+  // counts (e.g. "Rainbow And Gold" at 1). Excluding them keeps the headline honest.
+  const rankable = UNITS.filter((u) => u[6] != null && u[3] > 0);
+  const rarest = rankable.reduce((a, b) => ((b[6] ?? 1e9) < (a[6] ?? 1e9) ? b : a), rankable[0]);
 
   return (
     <section className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <div className="surface p-4"><div className="text-xs uppercase tracking-wide text-muted-foreground">Brainrots tracked</div><div className="mt-1 font-mono text-3xl font-bold text-gradient">{UNITS.length}</div></div>
         <div className="surface p-4"><div className="text-xs uppercase tracking-wide text-muted-foreground">Highest income</div><div className="mt-1 truncate font-semibold">{top[0]}</div><div className="font-mono text-sm text-primary-glow">{top[2]}</div></div>
-        <div className="surface p-4"><div className="text-xs uppercase tracking-wide text-muted-foreground">Rarest known</div><div className="mt-1 truncate font-semibold">{rarest[0]}</div><div className="font-mono text-sm text-primary-glow">{rarest[6]} exist</div></div>
+        <div className="surface p-4"><div className="text-xs uppercase tracking-wide text-muted-foreground">Rarest known</div><div className="mt-1 truncate font-semibold">{rarest[0]}</div><div className="font-mono text-sm text-primary-glow">{rarest[6]} exist</div><div className="mt-1 text-[10px] text-muted-foreground/70">{rankable.length} of {UNITS.length} units counted</div></div>
       </div>
 
       <div className="flex flex-wrap gap-1 rounded-2xl p-1 glass-bar">
