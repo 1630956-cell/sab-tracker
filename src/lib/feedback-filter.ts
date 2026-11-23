@@ -24,35 +24,31 @@ export function normalize(text: string): string {
     .replace(/[^a-z]/g, "");
 }
 
-/** Known slurs. Any whole-word hit blocks the submission. */
-const SLURS: string[] = [
-  // racial / ethnic
-  "nigger", "nigga", "niglet", "kike", "spic", "wetback", "chink", "gook", "raghead", "towelhead",
-  "porchmonkey", "coonass", "sambos", "paki", "beaner", "cameljockey", "sandnigger",
-  // homophobic / transphobic
-  "faggot", "fagot", "faggots", "dyke", "dykes", "tranny", "trannies", "shemale",
-  // ableist
-  "retard", "retards", "retarded", "mongoloid",
-  // antisemitic / extremist
-  "hitlerwasright", "heilhitler", "whitepower", "gasjews", "zionazi",
+/** The exact ban list. Whole-word matches only, so "class" and "pass" are fine. */
+const BANNED: string[] = [
+  "niggger", "nigga", "nigger", "nga", "nger",
+  "fuck", "fck",
+  "rape", "slave",
+  "bitch", "ass", "shit", "bunz",
+  "kys",
 ];
 
-/** Innocent words that share letters with a short slur. */
-const ALLOW = new Set(["spices", "spicy", "suspicious", "suspicion", "auspicious", "retardant", "retardants"]);
+/** Banned phrases — matched on the flattened text because they contain spaces. */
+const BANNED_PHRASES: string[] = ["kill yourself", "killyourself", "kys"];
+
+/** Innocent words that would otherwise collide with a short banned word. */
+const ALLOW = new Set(["class", "classes", "pass", "passed", "assassin", "assassins", "grass", "glass", "bass", "mass", "basket"]);
 
 const TOKEN_SPLIT = /[^a-z0-9@$!]+/i;
 
-function containsSlur(text: string, term: string): boolean {
+/** Normalised repeat-collapsing means "niggger" and "n1gga" both land on a listed form. */
+function containsBanned(text: string, term: string): boolean {
   const target = normalize(term);
   const flat = normalize(text);
-  if (!flat) return false;
+  if (!flat || !target) return false;
   if (flat === target) return true;
   const tokens = text.toLowerCase().split(TOKEN_SPLIT).map(normalize).filter(Boolean);
-  return tokens.some((tok) => {
-    if (ALLOW.has(tok)) return false;
-    if (tok === target) return true;
-    return target.length >= 6 && tok.startsWith(target);
-  });
+  return tokens.some((tok) => (ALLOW.has(tok) ? false : tok === target));
 }
 
 export type ScreenResult = {
@@ -65,12 +61,12 @@ export type ScreenResult = {
 
 export function screenMessage(raw: string): ScreenResult {
   const text = raw.trim();
-  // "spic and span" is an ordinary phrase.
-  if (/\bspic\s+(and|n)\s+span\b/i.test(text)) return { ok: true, reason: null, cleaned: text };
+  const flat = normalize(text);
 
-  const hit = SLURS.find((w) => containsSlur(text, w));
-  if (hit) {
-    return { ok: false, reason: "That message contains a slur, so it can't be sent. Reword it and try again.", cleaned: text };
+  const phrase = BANNED_PHRASES.some((p) => flat.includes(normalize(p)));
+  const word = phrase ? undefined : BANNED.find((w) => containsBanned(text, w));
+  if (phrase || word) {
+    return { ok: false, reason: "That message contains a banned word, so it can't be sent. Reword it and try again.", cleaned: text };
   }
   return { ok: true, reason: null, cleaned: text };
 }
