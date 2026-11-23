@@ -8,6 +8,8 @@ export type MutationDef = {
   name: string;
   /** Income multiplier. null = unpublished. */
   multiplier: number | null;
+  /** Community-reported value, shown as a flagged estimate only. Never treated as fact. */
+  reported?: number;
   /** Short tag shown under the value. */
   tag: string;
   note: string;
@@ -29,7 +31,7 @@ export const MUTATIONS: MutationDef[] = [
   { name: "Phantom", multiplier: 12, tag: "event", note: "Phantom event, Update 53" },
   { name: "Crystal", multiplier: 13, tag: "event", note: "Crystal event, Update 59" },
   { name: "Eclipse", multiplier: 14, tag: "event", note: "Eclipse event, Update 69" },
-  { name: "Hacker", multiplier: null, tag: "unpublished", note: "Update 76 — multiplier never published; community claims 15x, unconfirmed" },
+  { name: "Hacker", multiplier: null, reported: 15, tag: "unconfirmed", note: "Update 76 — multiplier never published; community reports 15x, unconfirmed" },
 ];
 
 /** Compact money formatter: 1500000000 -> $1.5B */
