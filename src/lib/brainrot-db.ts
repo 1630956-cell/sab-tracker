@@ -16,7 +16,7 @@ export const DB = {
     { label: "Handle", value: "@SpyderSammy — display name “Sammy”, Roblox user ID 2678001507" },
     { label: "Real name", value: "Reported as Sam Brakta (unconfirmed by Sammy himself)" },
     { label: "Age / country", value: "Reported as 24, United States (unconfirmed)" },
-    { label: "Cat", value: "Nova" },
+    { label: "Cat", value: "Nova (some players also report a second cat, Mangus — community-reported, not confirmed)" },
     { label: "Role", value: "Owner of the BRAZILIAN SPYDER group; Chief Production/Product Officer at Do Big Studios" },
     { label: "On Roblox since", value: "2013" },
     { label: "Games", value: "Crab Game (2022), Mining Clicker Simulator, Pixel Tower Defense (2024); worked on Blade Ball, Race Clicker, Schedule, Fisch" },
@@ -34,7 +34,7 @@ export const DB = {
     { method: "Stealing", how: "Walk into an unlocked base, grab a Brainrot and carry it home before getting hit." },
     { method: "Fuse Machine", how: "Put in 4 Brainrots for a random result. Seasonal versions: Witch, Santa, Divine, Summer, Haunted Fuse." },
     { method: "Craft / OG Craft / Cyber Craft", how: "Feed a set recipe of Brainrots to get a specific one (e.g. Los Dragons from OG Craft)." },
-    { method: "Bros Machine", how: "Added in update 75 (Nov 14, 2026) — pair 2 specific Brainrots + a cash fee to craft a Secret “Bros”. New Bros added in update 76 (e.g. Timmy Bros = Grim Cheese + Tim Cheese)." },
+    { method: "Bros Machine", how: "Added in update 75 (Nov 14, 2026) — pair 2 specific Brainrots + a cash fee to craft a Secret “Bros”. New Bros added in update 76 (Timmy Bros, Ball Bros); their ingredient pairs are not documented by any source yet." },
     { method: "RNG Machine", how: "Roll randomized offers and claim them (was replaced by OG Craft in Sept 2026)." },
     { method: "Lucky Blocks", how: "Open for random Brainrots — bought with cash, Robux, or dropped in events (Spooky, Festive, Taco, Skull, Heart blocks…)." },
     { method: "Admin Abuse", how: "Sammy spawns rare Brainrots, gifts and server lotteries live on Saturdays and Taco Tuesday." },
@@ -136,7 +136,7 @@ export const DB = {
     { name: "Papafrito", note: "Secret · $105M/s · DLC (bear in french fries)" },
     { name: "Puffin Muffin", note: "Brainrot God · $324.5K/s · DLC" },
     { name: "Ball Bros", note: "Secret · $125M/s · Bros Machine (Tenini Ballini + Allesio)" },
-    { name: "Timmy Bros", note: "Secret · $7.25M/s · Bros Machine (Grim Cheese + Tim Cheese)" },
+    { name: "Timmy Bros", note: "Secret · $7.25M/s · Bros Machine (ingredients undocumented)" },
   ] as Note[],
 
   rarities: [
@@ -159,7 +159,7 @@ export const DB = {
 
   /** Bros Machine recipes: 2 Brainrots + cash fee → one Secret Bros. */
   bros: [
-    { name: "Timmy Bros", recipe: "Grim Cheese + Tim Cheese", income: "New · update 76 · $7.25M/s" },
+    { name: "Timmy Bros", recipe: "not documented by any source", income: "New · update 76 · $7.25M/s" },
     { name: "Ball Bros", recipe: "Tenini Ballini + Allesio", income: "New · update 76 · $125M/s" },
     { name: "Scary Bros", recipe: "Fishino Clownino + Scarino Crowino", income: "$230M/s · 1 h" },
     { name: "Cabin Bros", recipe: "Lionello Casarello + Bearito Cabinito", income: "$205M/s · 1 h" },
