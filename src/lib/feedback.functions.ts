@@ -29,9 +29,9 @@ export const submitFeedback = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }): Promise<FeedbackResult> => {
     if (!CATEGORIES.has(data.category)) return { delivered: false, via: "none", error: null, reason: "Pick a category first." };
-    if (data.message.trim().length < 4) return { delivered: false, via: "none", error: null, reason: "Add a few more characters so the report makes sense." };
+    if (data.message.trim().length === 0) return { delivered: false, via: "none", error: null, reason: "Write something first." };
 
-    // Re-screen on the server: the client filter is a convenience, not a control.
+    // Re-screen on the server for slurs only: the client filter is a convenience, not a control.
     const checked = screenMessage(data.message);
     if (!checked.ok) return { delivered: false, via: "none", error: null, reason: checked.reason };
 
