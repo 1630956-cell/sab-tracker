@@ -29,7 +29,7 @@ export const submitFeedback = createServerFn({ method: "POST" })
   }))
   .handler(async ({ data }): Promise<FeedbackResult> => {
     if (!CATEGORIES.has(data.category)) return { delivered: false, via: "none", error: null, reason: "Pick a category first." };
-    if (data.message.trim().length < 10) return { delivered: false, via: "none", error: null, reason: "Add a bit more detail — at least 10 characters." };
+    if (data.message.trim().length < 4) return { delivered: false, via: "none", error: null, reason: "Add a few more characters so the report makes sense." };
 
     // Re-screen on the server: the client filter is a convenience, not a control.
     const checked = screenMessage(data.message);
