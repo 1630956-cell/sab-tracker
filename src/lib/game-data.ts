@@ -17,7 +17,7 @@ export const UPDATES: Update[] = [
   { n: 74, date: "2026-11-07", title: "Red Carpet Brainrots", items: ["Balloon Baboon (Secret) — $23.5M/s", "Bling Luming (Secret) — $2.6M/s", "Eclipse Admin Machine (community-reported)"] },
   { n: 73, date: "2026-10-31", title: "Halloween Trick or Treat", items: ["Headless Merchant", "Bat Trait", "Puppetmaster — $177.5M/s", "Scarino Crowino — $135M/s", "Scorpi Inferni — $76M/s", "Jacko Jakat — $41M/s", "Spooky Kart — $13M/s"] },
   { n: 72, date: "2026-10-24", title: "Grave Hunt / Dig Event", items: ["New dig event", "New Brainrots"] },
-  { n: 71, date: "2026-10-17", title: "Hourly Skeleton Event", items: ["Normal, Dracula (25%) and Witch (5%) skeletons", "Skelly and Coffy — $155M/s", "Arca Bros — $250M/s (merch code)", "Medusini and Demonini — $180M/s"] },
+  { n: 71, date: "2026-10-17", title: "Hourly Skeleton Event", items: ["Normal, Dracula (25%) and Witch (5%) skeletons", "Skelly and Coffy — $155M/s", "Slushi Huski — Brainrot God, $322.5K/s", "Arca Bros — $250M/s (merch code)", "Medusini and Demonini — $180M/s"] },
   { n: 68, date: "2026-09-26", title: "Island Egg Event + 11 Brainrots", items: ["Island-hopping trampoline event", "Draculino — $120M/s", "Lionello Casarello — $58.5M/s", "Lavamanta — $28.5M/s"] },
   { n: 66, date: "2026-09-12", title: "OG Craft Machine Returns", items: ["Replaces RNG Machine", "Los Dragons — $425M/s", "Hippo Jacuzzo, Koala Parabala (Brainrot God)"] },
   { n: 65, date: "2026-09-05", title: "Money Money Puggy Ritual", items: ["Fuse two Money Money Puggies into Los Puggies — $40M/s", "1 of 1 base skin"] },
