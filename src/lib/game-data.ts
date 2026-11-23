@@ -12,7 +12,7 @@ export type Update = { n: number; date: string; title: string; items: string[] }
 
 /** Seed database of known updates, newest first. Gemini refresh adds newer ones live. */
 export const UPDATES: Update[] = [
-  { n: 76, date: "2026-11-21", title: "New Bros + Hacker Mutation", items: ["Hacker mutation — 15× income (reported)", "Kitsune — Secret, $240M/s (DLC)", "Papafrito (bear in french fries) — Secret, $105M/s (DLC)", "Puffin Muffin — Brainrot God, $324.5K/s (DLC)", "Ball Bros — Tenini Ballini + Allesio, $125M/s", "Timmy Bros — Grim Cheese + Tim Cheese, $7.25M/s"] },
+  { n: 76, date: "2026-11-21", title: "New Bros + Hacker Mutation", items: ["Hacker mutation — multiplier not published by the devs (community says ~15×)", "Kitsune — Secret, $240M/s (DLC)", "Papafrito (bear in french fries) — Secret, $105M/s (DLC)", "Puffin Muffin — Brainrot God, $324.5K/s (DLC)", "Ball Bros — Secret, $125M/s (Bros Machine craft)", "Timmy Bros — Secret, $7.25M/s (Bros Machine craft — ingredient pair not documented)"] },
   { n: 75, date: "2026-11-14", title: "Bros Machine", items: ["New Bros Machine", "Brainrot buffs"] },
   { n: 74, date: "2026-11-07", title: "Red Carpet Brainrots", items: ["Balloon Baboon (Secret) — $23.5M/s", "Bling Luming (Secret) — $2.6M/s", "Eclipse Admin Machine (community-reported)"] },
   { n: 73, date: "2026-10-31", title: "Halloween Trick or Treat", items: ["Headless Merchant", "Bat Trait", "Puppetmaster — $177.5M/s", "Scarino Crowino — $135M/s", "Scorpi Inferni — $76M/s", "Jacko Jakat — $41M/s", "Spooky Kart — $13M/s"] },
