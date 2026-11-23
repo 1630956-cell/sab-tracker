@@ -43,6 +43,22 @@ function Countdown({ label, target }: { label: string; target: Date }) {
   );
 }
 
+function ThemeToggle() {
+  const [light, setLight] = useState(false);
+  useEffect(() => { setLight(document.documentElement.classList.contains("light")); }, []);
+  const flip = () => {
+    const next = !light; setLight(next);
+    const el = document.documentElement;
+    el.classList.toggle("light", next); el.classList.toggle("dark", !next);
+    try { localStorage.setItem("theme", next ? "light" : "dark"); } catch { /* ignore */ }
+  };
+  return (
+    <button onClick={flip} aria-label={light ? "Switch to black theme" : "Switch to white theme"} className="flex items-center gap-1 rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs font-medium transition hover:shadow-glow">
+      <span className={light ? "opacity-40" : ""}>🌙</span><span className="text-muted-foreground">/</span><span className={light ? "" : "opacity-40"}>☀️</span>
+    </button>
+  );
+}
+
 const TABS = [
   { id: "updates", label: "Update log" },
   { id: "codex", label: "Brainrot Codex" },
@@ -67,14 +83,18 @@ function Home() {
     <div className="relative min-h-screen overflow-x-hidden bg-background text-foreground">
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-spotlight" />
       <div aria-hidden className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-grid" />
+      <div aria-hidden className="pointer-events-none fixed inset-x-0 top-0 h-px neon-edge" />
 
       <div className="sticky top-3 z-20 mt-3 px-4 sm:px-5">
       <header className="mx-auto flex max-w-5xl items-center justify-between rounded-2xl px-4 py-2.5 glass-bar">
         <div className="flex items-center gap-2 text-base font-bold tracking-tight">
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-brand shadow-glow">🧠</span>
-          {BRAND.name}
+          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-brand shadow-glow">⚡</span>
+          <span className="font-display text-sm sm:text-base">{BRAND.name}</span>
         </div>
+        <div className="flex items-center gap-2">
+        <ThemeToggle />
         <a href={GAME.url} target="_blank" rel="noreferrer" className="rounded-lg bg-gradient-brand px-3.5 py-1.5 text-sm font-semibold text-primary-foreground shadow-glow transition hover:brightness-110">Play game ↗</a>
+        </div>
       </header>
       </div>
 
@@ -105,7 +125,7 @@ function Home() {
               <span className="rounded bg-gradient-brand px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">NEW</span>
               Update #{latest.n} · {latest.date}
             </div>
-            <h2 className="mt-2 text-2xl font-bold">{latest.title}</h2>
+            <h2 className="mt-2 font-display text-2xl font-bold">{latest.title}</h2>
             <ul className="mt-3 grid gap-1.5 text-sm text-muted-foreground">{latest.items.map((i) => <li key={i} className="flex gap-2"><span className="text-primary-glow">▸</span>{i}</li>)}</ul>
           </div>
           <div className="surface p-6">
