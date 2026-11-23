@@ -12,6 +12,7 @@ import { guard, RepeatTracker } from "@/lib/abuse-guard";
 import { CodexPanel } from "@/components/CodexPanel";
 import { BasePanel } from "@/components/BasePanel";
 import { TradePanel } from "@/components/TradePanel";
+import { FeedbackPanel } from "@/components/FeedbackPanel";
 
 const clientTracker = new RepeatTracker();
 
@@ -66,6 +67,7 @@ const TABS = [
   { id: "codex", label: "Brainrot Codex" },
   { id: "base", label: "Base yield" },
   { id: "trade", label: "Trade lab" },
+  { id: "report", label: "Report / suggest" },
   { id: "database", label: "Database" },
   { id: "sammy", label: "Sammy & the game" },
   { id: "ask", label: "Ask AI" },
@@ -195,6 +197,7 @@ function Home() {
         {tab === "codex" && <CodexPanel />}
         {tab === "base" && <BasePanel />}
         {tab === "trade" && <TradePanel />}
+        {tab === "report" && <FeedbackPanel />}
         {tab === "database" && <DatabasePanel />}
 
         {tab === "ask" && <AskPanel />}
