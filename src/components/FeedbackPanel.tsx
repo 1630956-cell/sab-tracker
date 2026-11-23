@@ -27,7 +27,7 @@ export function FeedbackPanel() {
   });
 
   const screen = useMemo(() => screenMessage(message), [message]);
-  const tooShort = message.trim().length > 0 && message.trim().length < 10;
+  const tooShort = message.trim().length > 0 && message.trim().length < 4;
 
   const remember = (entry: Sent) => {
     const next = [entry, ...history].slice(0, 8);
@@ -53,8 +53,8 @@ export function FeedbackPanel() {
 
   const send = async () => {
     if (!screen.ok) return;
-    if (message.trim().length < 10) {
-      setResult({ tone: "warn", text: "Add a bit more detail — at least 10 characters." });
+    if (message.trim().length < 4) {
+      setResult({ tone: "warn", text: "Add a few more characters so the report makes sense." });
       return;
     }
     setBusy(true);
