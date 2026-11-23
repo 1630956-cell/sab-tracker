@@ -27,7 +27,7 @@ export function FeedbackPanel() {
   });
 
   const screen = useMemo(() => screenMessage(message), [message]);
-  const tooShort = message.trim().length > 0 && message.trim().length < 4;
+  const tooShort = message.trim().length === 0;
 
   const remember = (entry: Sent) => {
     const next = [entry, ...history].slice(0, 8);
@@ -53,8 +53,8 @@ export function FeedbackPanel() {
 
   const send = async () => {
     if (!screen.ok) return;
-    if (message.trim().length < 4) {
-      setResult({ tone: "warn", text: "Add a few more characters so the report makes sense." });
+    if (message.trim().length === 0) {
+      setResult({ tone: "warn", text: "Write something first." });
       return;
     }
     setBusy(true);
@@ -151,7 +151,7 @@ export function FeedbackPanel() {
               Copy text
             </button>
           )}
-          <span className="text-[11px] text-muted-foreground/70">Slurs and threats are blocked automatically.</span>
+          <span className="text-[11px] text-muted-foreground/70">Known slurs are blocked. Everything else goes through.</span>
         </div>
 
         {result && (
