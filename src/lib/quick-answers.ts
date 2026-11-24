@@ -11,6 +11,8 @@ const latest = UPDATES[0]!;
 const codes = DB.codes.filter((c) => c.status !== "expired").map((c) => c.code).join(", ");
 
 const RULES: Rule[] = [
+  { test: /\b(favorite|favourite|fav)\s+(brainrot|unit)\b|\b(brainrot|unit)\b.*\b(favorite|favourite|fav)\b/, answer: () => "Meowl" },
+  { test: /\b(favorite|favourite|fav)\s+mutation\b|\bmutation\b.*\b(favorite|favourite|fav)\b/, answer: () => "Unknown" },
   { test: /\bcannelloni\b|hydra\s+dragon/, answer: () => "Hydra Dragon Cannelloni — Secret · $300M/s (formerly $350M/s) · cost $300B (formerly $350B) · Unobtainable (Fuse Machine)" },
   { test: /\bcats?\b|\bpet\b/, answer: () => "Nova" },
   { test: /(what is|what's|whats|tell me)\s+(your|my)?\s*(developer|real|roblox|personal)?\s*(name|handle)|\b(username|handle|@)\b.*\b(sammy|owner|creator|dev)\b|\b(sammy|owner|creator|dev)\b.*\b(username|handle|@)\b/, answer: () => `Sammy (@${SAMMY.handle})` },
