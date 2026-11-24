@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MUTATIONS, money } from "@/lib/mutations";
-import { existsFor } from "@/lib/mutation-exists";
+import { existsForWithAdditional as existsFor } from "@/lib/mutation-exists-additional";
 
 /** Colour the value by scarcity when a variant count is public, otherwise by multiplier tier. */
 function valueTone(multiplier: number | null, exists: number | null): string {
@@ -21,14 +21,13 @@ function valueTone(multiplier: number | null, exists: number | null): string {
  * Raw income plus what that same unit earns under every mutation.
  * Unpublished multipliers render as "—" instead of a guessed number.
  */
-export function MutationMatrix({ perSec, unitName = "", inline = false, totalExists = null }: { perSec: number; unitName?: string; inline?: boolean; totalExists?: number | null }) {
+export function MutationMatrix({ perSec, unitName = "", inline = false }: { perSec: number; unitName?: string; inline?: boolean }) {
   const [picked, setPicked] = useState<string | null>(null);
   if (!perSec) return null;
   const pickedDef = picked ? MUTATIONS.find((x) => x.name === picked) ?? null : null;
   const pickedExists = pickedDef ? existsFor(unitName, pickedDef.name) : null;
   const pickedExact = pickedDef ? (pickedDef.multiplier != null ? perSec * pickedDef.multiplier : null) : null;
   const pickedEstimate = pickedDef && pickedExact == null && pickedDef.reported != null ? perSec * pickedDef.reported : null;
-  const selectedExists = picked === "Default" ? existsFor(unitName, "Default") ?? totalExists : pickedExists;
   return (
     <div className={inline ? "space-y-1.5" : "mt-2 space-y-1.5"}>
       <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -84,12 +83,8 @@ export function MutationMatrix({ perSec, unitName = "", inline = false, totalExi
             {picked === "Default" ? money(perSec) : pickedExact != null ? money(pickedExact) : pickedEstimate != null ? `~${money(pickedEstimate)}` : "—"}
           </span>
           <span className="mx-1.5 text-muted-foreground/50">·</span>
-          <span className={`font-mono ${selectedExists != null ? "text-primary-glow" : "text-muted-foreground/70"}`}>
-            {selectedExists != null
-              ? `${selectedExists.toLocaleString()} exist`
-              : totalExists != null
-                ? `${totalExists.toLocaleString()} total exist · variant unreleased`
-                : "exist count not published"}
+          <span className={`font-mono ${(picked === "Default" ? existsFor(unitName, "Default") : pickedExists) == null ? "text-muted-foreground/70" : "text-primary-glow"}`}>
+            {(picked === "Default" ? existsFor(unitName, "Default") : pickedExists) == null ? "exist count not published" : `${(picked === "Default" ? existsFor(unitName, "Default") : pickedExists)} exist`}
           </span>
         </div>
       ) : (
@@ -103,7 +98,7 @@ export function MutationMatrix({ perSec, unitName = "", inline = false, totalExi
 }
 
 /** Expandable wrapper so a card stays compact until tapped. */
-export function MutationToggle({ perSec, unitName = "", totalExists = null }: { perSec: number; unitName?: string; totalExists?: number | null }) {
+export function MutationToggle({ perSec, unitName = "" }: { perSec: number; unitName?: string }) {
   const [open, setOpen] = useState(false);
   if (!perSec) return null;
   return (
@@ -115,7 +110,7 @@ export function MutationToggle({ perSec, unitName = "", totalExists = null }: { 
         <span className="text-muted-foreground">All {MUTATIONS.length} mutations</span>
         <span className="font-mono text-primary-glow">{open ? "▴" : "▾"}</span>
       </button>
-      {open && <MutationMatrix perSec={perSec} unitName={unitName} totalExists={totalExists} />}
+      {open && <MutationMatrix perSec={perSec} unitName={unitName} />}
     </div>
   );
 }
