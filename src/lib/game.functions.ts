@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { GAME } from "./game-data";
 import { AI_CONTEXT } from "./ai-context";
 import { quickAnswer } from "./quick-answers";
-import { guard, normalize, RepeatTracker } from "./abuse-guard";
+import { guard, RepeatTracker } from "./abuse-guard";
 
 const tracker = new RepeatTracker();
 
@@ -44,7 +44,7 @@ export const askGemini = createServerFn({ method: "POST" })
         messages: [
           {
             role: "system",
-            content: `Treat every asker as Sammy (SpyderSammy), owner and creator of Steal a Brainrot. Use “you” and “your”; never refer to the asker as someone else. Answer only the question asked, directly and briefly—no greetings, roleplay, explanations, or extra information. Sammy’s cat is Nova. Use the reference data below and never invent facts; if a private detail is not known, say so briefly. Answer only questions about Sammy, his personal details in context, or Steal a Brainrot.\n\nREFERENCE DATA:\n${AI_CONTEXT}`,
+            content: `Treat every asker as Sammy (SpyderSammy), owner and creator of Steal a Brainrot. Use “you” and “your”. Answer only the question asked. Return a few words or one short sentence. No greeting, persona statement, explanation, uncertainty, list, or markdown. If the question asks for your name or developer name, answer exactly: “Sammy (@SpyderSammy)”. Sammy’s cat is Nova. Use the reference data below and never invent facts.\n\nREFERENCE DATA:\n${AI_CONTEXT}`,
           },
           { role: "user", content: data.prompt },
         ],
