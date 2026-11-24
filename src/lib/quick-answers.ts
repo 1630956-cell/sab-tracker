@@ -297,7 +297,34 @@ function answerFromCatalog(question: string): string | null {
   return null;
 }
 
+function bestObtainableOGAnswer(): string {
+  const candidates = UNITS.filter((unit) => {
+    const [name, rarity, , perSec, obtain] = unit;
+    const method = obtain.toLowerCase();
+
+    return (
+      rarity === "OG" &&
+      perSec > 0 &&
+      method.includes("red carpet spawn") &&
+      !/\b(retired|unobtainable|never spawns|discontinued)\b/i.test(method)
+    );
+  });
+
+  candidates.sort((a, b) => b[3] - a[3]);
+
+  const best = candidates[0];
+  if (!best) return "Unknown";
+
+  const exist = best[6] == null ? "Unknown" : String(best[6]);
+
+  return `${best[0]} · ${exist} · Sammy`;
+}
+
 const RULES: Rule[] = [
+  {
+    test: /\b(best|strongest|highest|top)\b.*\b(obtainable|obtain|available)\b.*\bog\b|\bog\b.*\b(best|strongest|highest|top)\b.*\b(obtainable|obtain|available)\b/i,
+    answer: bestObtainableOGAnswer,
+  },
   {
     test:
       /\b(favorite|favourite|fav)\s+(brainrot|unit)\b|\b(brainrot|unit)\b.*\b(favorite|favourite|fav)\b/,
