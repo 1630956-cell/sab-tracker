@@ -13,11 +13,11 @@ const codes = DB.codes.filter((c) => c.status !== "expired").map((c) => c.code).
 const RULES: Rule[] = [
   { test: /\bcannelloni\b|hydra\s+dragon/, answer: () => "Hydra Dragon Cannelloni — Secret · $300M/s (formerly $350M/s) · cost $300B (formerly $350B) · Unobtainable (Fuse Machine)" },
   { test: /\bcats?\b|\bpet\b/, answer: () => "Nova" },
-  { test: /(roblox )?(user ?name|handle|@)\b.*(sammy|owner|creator|dev)|(sammy|owner|creator).*(user ?name|handle)/, answer: () => `@${SAMMY.handle}` },
+  { test: /(what is|what's|whats|tell me)\s+(your|my)?\s*(developer|real|roblox|personal)?\s*(name|handle)|\b(username|handle|@)\b.*\b(sammy|owner|creator|dev)\b|\b(sammy|owner|creator|dev)\b.*\b(username|handle|@)\b/, answer: () => `Sammy (@${SAMMY.handle})` },
   { test: /(studio|company)/, answer: () => "Do Big Studios" },
   { test: /\bgroup\b/, answer: () => GAME.groupName },
   { test: /(what|which) (other )?games?.*(sammy|owner|creator|dev)|(sammy|owner|creator).*(other )?games/, answer: () => "Crab Game, Mining Clicker Simulator, Pixel Tower Defense; worked on Blade Ball, Race Clicker, Schedule and Fisch" },
-  { test: /\b(owner|own|owns|creator|created|create|made|make|maker|developer|developers|dev|devs|founder)\b|who is sammy/, answer: () => "Sammy" },
+  { test: /\b(owner|own|owns|creator|created|create|made|make|maker|developer|developers|dev|devs|founder)\b|who is sammy/, answer: () => "Sammy (@SpyderSammy)" },
   { test: /\b(released?|came out|come out|release date|launch(ed)?)\b/, answer: () => GAME.released },
   { test: /\b(taco tuesday|admin abuse)\b/, answer: () => "Saturdays after the update, and Tuesdays at 6 PM ET (Taco Tuesday)" },
   { test: /\b(newest|latest|last|recent|current) update\b|\bupdate (is )?(out|now)\b/, answer: () => `Update ${latest.n}: ${latest.title} (${latest.date})` },
