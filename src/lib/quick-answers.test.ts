@@ -6,6 +6,10 @@ describe("quickAnswer", () => {
     expect(quickAnswer("Who is the owner of Steal a Brainrot?")).toBe("Sammy");
     expect(quickAnswer("who made the game")).toBe("Sammy");
   });
+  it("answers the user's name only when asked", () => {
+    expect(quickAnswer("What is my name?")).toBe("Your name is Sammy.");
+    expect(quickAnswer("What is the best obtainable OG?")).not.toContain("Sammy");
+  });
   it("Sammy's cat is Nova", () => {
     expect(quickAnswer("What is Sammy's cat name?")).toBe("Nova");
   });
@@ -21,6 +25,24 @@ describe("quickAnswer", () => {
   it("Hacker mutation is 15x and the best mutation", () => {
     expect(quickAnswer("What is the Hacker mutation multiplier?")).toBe("15× (reported)");
     expect(quickAnswer("What's the best mutation?")).toBe("Hacker (15×, reported)");
+  });
+  it("uses mutation-specific existence separately from base existence", () => {
+    expect(quickAnswer("How many Meowl exist in Gold?")).toBe("Meowl — Gold existence: 323");
+    expect(quickAnswer("How many Meowl exist?")).toBe("4037");
+  });
+  it("answers all parts of a multi-part question", () => {
+    const answer = quickAnswer("what the best obtainable og my name and meowl exist in gold");
+    expect(answer).toContain("Best currently obtainable OG: I can't confirm which OG is currently obtainable from the available game data.");
+    expect(answer).toContain("Your name: Sammy.");
+    expect(answer).toContain("Meowl Gold existence: 323.");
+  });
+  it("does not confirm an OG based on static obtain text", () => {
+    expect(quickAnswer("What is the best obtainable OG?")).toBe(
+      "I can't confirm which OG is currently obtainable from the available game data."
+    );
+  });
+  it("does not autocorrect Spyder Elephant to a misspelling", () => {
+    expect(quickAnswer("What is Spyder Elephant's rarity?")).toBe("OG");
   });
   it("Timmy Bros needs Grim Cheese + Tim Cheese", () => {
     expect(quickAnswer("How do I make Timmy Bros?")).toBe("Grim Cheese + Tim Cheese");

@@ -1,6 +1,8 @@
 import { DB } from "./brainrot-db";
 import { GAME, UPDATES } from "./game-data";
 import { UNITS } from "./codex-data";
+import { existsForWithAdditional } from "./mutation-exists-additional";
+import { MUTATIONS } from "./mutations";
 
 type Rule = { test: RegExp; answer: () => string };
 type Unit = (typeof UNITS)[number];
@@ -60,6 +62,31 @@ function formatUnit(
   return includeName
     ? `${unit[0]}${values ? ` — ${values}` : ""}`
     : values;
+}
+
+/** Find every Brainrot explicitly mentioned in the question. */
+function findAllUnits(question: string, units: Unit[]): Unit[] {
+  const normalizedQuestion = question
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, " ");
+
+  const matches = units.filter((unit) => {
+    const normalizedName = unit[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, " ");
+
+    return normalizedQuestion.includes(normalizedName);
+  });
+
+  return [...new Map(matches.map((unit) => [unit[0], unit])).values()];
+}
+
+function findRequestedMutation(q: string): string | null {
+  return (
+    MUTATIONS.map((mutation) => mutation.name).find((name) =>
+      ` ${q} `.includes(` ${normalize(name)} `)
+    ) ?? null
+  );
 }
 
 /** Calculate edit distance for cautious typo matching. */
@@ -285,39 +312,124 @@ function answerFromCatalog(question: string): string | null {
       : "No Brainrots match that income range.";
   }
 
-  const unit = findUnit(question);
-  if (!unit) return null;
+  const asksBestOG =
+    /\b(best|strongest|highest|top)\b/.test(q) &&
+    /\bog\b/.test(q) &&
+    /\b(obtainable|obtain|available)\b/.test(q);
+  const asksUserName =
+    /\bmy name\b|\bwho am i\b|\buser s name\b/.test(q);
+  const mutation = fields.exists ? findRequestedMutation(q) : null;
+  const mentionedUnits = findAllUnits(question, UNITS);
+  const fallbackUnit = mentionedUnits.length ? null : findUnit(question);
+  const units = mentionedUnits.length
+    ? mentionedUnits
+    : fallbackUnit
+      ? [fallbackUnit]
+      : [];
+
+  if (asksBestOG || asksUserName) {
+    const answers: string[] = [];
+
+    if (asksBestOG) {
+      answers.push(
+        `Best currently obtainable OG: ${bestObtainableOGAnswer()}`
+      );
+    }
+
+    if (asksUserName) {
+      answers.push("Your name: Sammy.");
+    }
+
+    if (fields.income || fields.rarity || fields.exists) {
+      for (const unit of units) {
+        const unitFields = {
+          ...fields,
+          exists: fields.exists && !mutation,
+        };
+        const details = formatUnit(unit, unitFields);
+
+        if (details) {
+          answers.push(
+            `${unit[0]}: ${details}${mutation ? "" : "."}`
+          );
+        }
+
+        if (mutation) {
+          const count = existsForWithAdditional(unit[0], mutation);
+          const existenceText =
+            count === null ? "—" : String(count);
+          answers.push(`${unit[0]} ${mutation} existence: ${existenceText}.`);
+        }
+      }
+    }
+
+    return answers.join("\n");
+  }
 
   if (fields.income || fields.rarity || fields.exists) {
-    // Single-Brainrot answers contain only requested values.
-    // Example: "OG · 4037", not "Meowl — OG · 4037".
-    return formatUnit(unit, fields);
+    if (!units.length) return null;
+
+    const unitAnswers = units.map((unit) => {
+      if (fields.exists && mutation) {
+        const count = existsForWithAdditional(unit[0], mutation);
+        const existenceText =
+          count === null ? "—" : String(count);
+        const otherFields = { ...fields, exists: false };
+        const otherDetails = formatUnit(unit, otherFields);
+        const stats = [
+          ...(otherDetails ? [otherDetails] : []),
+          `${mutation} existence: ${existenceText}`,
+        ];
+        return `${unit[0]} — ${stats.join(" · ")}`;
+      }
+
+      return formatUnit(unit, fields, units.length > 1);
+    });
+
+    return units.length > 1 || (fields.exists && mutation)
+      ? unitAnswers.join("\n")
+      : unitAnswers[0]!;
   }
 
   return null;
 }
 
+function isConfirmedObtainableOG(unit: Unit): boolean {
+  const rarity = String(unit[1]).toLowerCase();
+  const obtain = String(unit[4] ?? "").toLowerCase();
+
+  if (rarity !== "og" || !obtain.trim()) return false;
+
+  const unavailableTerms = [
+    "never spawns",
+    "retired",
+    "unobtainable",
+    "discontinued",
+    "removed",
+    "never obtainable",
+    "no longer obtainable",
+  ];
+
+  if (unavailableTerms.some((term) => obtain.includes(term))) {
+    return false;
+  }
+
+  // Static obtain text does not prove that a method is active now.
+  // Only accept an explicitly verified current-availability field
+  // if the project actually has one.
+  return false;
+}
+
 function bestObtainableOGAnswer(): string {
-  const candidates = UNITS.filter((unit) => {
-    const [name, rarity, , perSec, obtain] = unit;
-    const method = obtain.toLowerCase();
+  const best = UNITS
+    .filter(isConfirmedObtainableOG)
+    .sort((a, b) => b[3] - a[3])[0];
 
-    return (
-      rarity === "OG" &&
-      perSec > 0 &&
-      method.includes("red carpet spawn") &&
-      !/\b(retired|unobtainable|never spawns|discontinued)\b/i.test(method)
-    );
-  });
+  if (!best) {
+    return "I can't confirm which OG is currently obtainable from the available game data.";
+  }
 
-  candidates.sort((a, b) => b[3] - a[3]);
-
-  const best = candidates[0];
-  if (!best) return "Unknown";
-
-  const exist = best[6] == null ? "Unknown" : String(best[6]);
-
-  return `${best[0]} · ${exist} · Sammy`;
+  return best[0];
 }
 
 const RULES: Rule[] = [
@@ -428,6 +540,10 @@ export function quickAnswer(question: string): string | null {
 
   for (const rule of RULES) {
     if (rule.test.test(q)) return rule.answer();
+  }
+
+  if (/\bmy name\b|\bwho am i\b|\buser s name\b/.test(q)) {
+    return "Your name is Sammy.";
   }
 
   return null;
