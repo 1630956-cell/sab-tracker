@@ -33,6 +33,8 @@ export const askGemini = createServerFn({ method: "POST" })
     if (quick) return { text: quick, error: null };
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { text: null, error: "AI is not set up for this app yet." };
+    const needsSearch =
+      /\b(latest|newest|today|tonight|right now|currently|live|leak|leaks|leaked|rumou?r|news|upcoming|next update|player count|how many players|just announced|recently announced)\b/i.test(data.prompt);
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AI-SDK": "fetch" },
@@ -40,13 +42,13 @@ export const askGemini = createServerFn({ method: "POST" })
         model: "google/gemini-3.8-flash",
         stream: true,
         reasoning_effort: "low",
-        tools: [{ type: "google_search" }],
+        ...(needsSearch ? { tools: [{ type: "google_search" }] } : {}),
         messages: [
           {
             role: "system",
             content: `Treat every asker as Sammy (SpyderSammy), owner and creator of Steal a Brainrot. Sammy’s cat is Nova.
 
-ABSOLUTE RESPONSE RULE: Answer only the direct answer. No greeting, introduction, persona statement, explanation, caveat, label, uncertainty, list, bullets, follow-up, or markdown. Never add “but” or anything else beyond the direct answer.
+ABSOLUTE RESPONSE RULE: Answer only the direct answer. No greeting, introduction, persona statement, explanation, caveat, label, uncertainty, list, bullets, follow-up, or markdown. Never add “bu[...]
 
 For personal-name questions, return exactly: Sammy.
 For favorite-unit or favorite-mutation questions, return only the requested stored value or “Unknown.”
