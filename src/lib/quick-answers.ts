@@ -3,6 +3,7 @@ import { GAME, UPDATES } from "./game-data";
 import { UNITS } from "./codex-data";
 
 type Rule = { test: RegExp; answer: () => string };
+type Unit = (typeof UNITS)[number];
 
 const latest = UPDATES[0]!;
 const codes = DB.codes
@@ -20,107 +21,52 @@ function normalize(value: string): string {
     .replace(/\s+/g, " ");
 }
 
-// Only send genuinely time-sensitive questions to the AI/web.
 const NEEDS_WEB =
-  /\b(leaks?|leaked|rumou?rs?|news|today|tonight|right now|currently|live|latest leaks?|upcoming leaks?)\b/;
+  /\b(leaks?|leaked|rumou?rs?|news|today|tonight|right now|currently|live|real name|age|player count|how many players)\b/;
 
-const RULES: Rule[] = [
-  {
-    test: /\b(favorite|favourite|fav)\s+(brainrot|unit)\b|\b(brainrot|unit)\b.*\b(favorite|favourite|fav)\b/,
-    answer: () => "Meowl",
-  },
-  {
-    test: /\b(favorite|favourite|fav)\s+mutation\b|\bmutation\b.*\b(favorite|favourite|fav)\b/,
-    answer: () => "Unknown",
-  },
-  {
-    test: /\bcannelloni\b|hydra\s+dragon/,
-    answer: () =>
-      "Hydra Dragon Cannelloni — Secret · $300M/s · $300B cost · Unobtainable (Fuse Machine)",
-  },
-  {
-    test: /\b(cat|cats|pet)\b/,
-    answer: () => "Nova",
-  },
-  {
-    test: /\b(username|handle)\b|\bwhat is (your|sammy'?s) name\b|\bwho is sammy\b/,
-    answer: () => "Sammy",
-  },
-  {
-    test: /\bstudio\b|\bcompany\b/,
-    answer: () => "Do Big Studios",
-  },
-  {
-    test: /\bgroup\b/,
-    answer: () => GAME.groupName,
-  },
-  {
-    test: /\b(owner|creator|founder|developer)\b/,
-    answer: () => "Sammy",
-  },
-  {
-    test: /\brelease date\b|\bwhen was .* released\b|\bwhen did .* release\b/,
-    answer: () => GAME.released,
-  },
-  {
-    test: /\btaco tuesday\b|\badmin abuse schedule\b/,
-    answer: () =>
-      "Saturdays after the update, and Tuesdays at 6 PM ET (Taco Tuesday)",
-  },
-  {
-    test: /\b(newest|latest|last|recent|current) update\b|\bupdate (is )?(out|now)\b/,
-    answer: () => `Update ${latest.n}: ${latest.title} (${latest.date})`,
-  },
-  {
-    test: /\b(next|upcoming) update\b|\bwhen.*\bupdates?\b|\bupdate (time|day)\b/,
-    answer: () => "Every Saturday at 3 PM ET",
-  },
-  {
-    test: /\bactive codes?\b|\bany codes?\b|\bgame codes?\b/,
-    answer: () => (codes ? `${codes} (unconfirmed)` : "No known active codes"),
-  },
-  {
-    // Do not match generic words such as "highest-earning Brainrots".
-    test: /\b(world|guinness|concurrent players|player record|record for most players|most players ever)\b/,
-    answer: () => "25,868,678 players (Oct 11, 2025)",
-  },
-  {
-    test: /\b(platforms?|console|xbox|playstation|ps5|mobile|phone)\b/,
-    answer: () => "PC, Mac, mobile, PlayStation and Xbox",
-  },
-  {
-    test: /\bhacker\b.*\bmutation\b|\bmutation\b.*\bhacker\b/,
-    answer: () => "15× (reported)",
-  },
-  {
-    test: /\b(best|highest|strongest|top) mutation\b/,
-    answer: () => "Hacker (15×, reported)",
-  },
-  {
-    test: /\b(best|highest|rarest|top) rarity\b/,
-    answer: () => "OG",
-  },
-];
-
-function formatUnit(unit: (typeof UNITS)[number]): string {
-  const [name, rarity, income, , , , exists] = unit;
-
-  const existsText =
-    exists == null ? "Exists: unknown" : `Exists: ${exists.toLocaleString("en-US")}`;
-
-  return `${name} — ${rarity} — ${income} — ${existsText}`;
+function requestedFields(q: string) {
+  return {
+    income: /\b(income|earn|earns|earning|per second|money|makes|make|\/s)\b/.test(q),
+    rarity: /\b(rarity|rarities|rare|tier)\b/.test(q),
+    exists: /\b(exist|exists|existing|how many|count|quantity|stock)\b/.test(q),
+  };
 }
 
-function getRequestedCount(question: string): number {
-  const match = question.match(/\btop\s+(\d{1,2})\b|\b(\d{1,2})\s+(?:best|highest|richest)\b/i);
-  const value = Number(match?.[1] ?? match?.[2] ?? 5);
+function formatUnit(
+  unit: Unit,
+  fields: ReturnType<typeof requestedFields>,
+  includeName = false
+): string {
+  const parts: string[] = [];
 
-  return Math.min(20, Math.max(1, value));
+  if (fields.rarity) parts.push(unit[1]);
+  if (fields.income) parts.push(unit[2] || "Unknown");
+
+  if (fields.exists) {
+    parts.push(
+      unit[6] == null
+        ? "Unknown"
+        : unit[6].toLocaleString("en-US")
+    );
+  }
+
+  const values = parts.join(" · ");
+  return includeName ? `${unit[0]}${values ? ` — ${values}` : ""}` : values;
+}
+
+function getRequestedCount(q: string): number {
+  const match =
+    q.match(/\btop\s+(\d{1,2})\b/) ??
+    q.match(/\b(\d{1,2})\s+(?:richest|highest|best)\b/);
+
+  return Math.min(20, Math.max(1, Number(match?.[1] ?? 5)));
 }
 
 function answerFromCatalog(question: string): string | null {
   const q = normalize(question);
   if (!q) return null;
+
+  const fields = requestedFields(q);
 
   const asksRanking =
     /\b(top|richest|highest earning|highest income|most profitable|best earning)\b/.test(q) &&
@@ -130,9 +76,10 @@ function answerFromCatalog(question: string): string | null {
     const count = getRequestedCount(q);
 
     return [...UNITS]
+      .filter((unit) => Number.isFinite(unit[3]))
       .sort((a, b) => b[3] - a[3])
       .slice(0, count)
-      .map((unit, index) => `${index + 1}. ${formatUnit(unit)}`)
+      .map((unit, index) => `${index + 1}. ${formatUnit(unit, fields, true)}`)
       .join("\n");
   }
 
@@ -159,17 +106,16 @@ function answerFromCatalog(question: string): string | null {
       .slice(0, 20);
 
     return matches.length
-      ? matches.map(formatUnit).join("\n")
-      : "No Brainrots in the catalog match that income range.";
+      ? matches.map((unit) => formatUnit(unit, fields, true)).join("\n")
+      : "No Brainrots match that income range.";
   }
 
-  // Match the longest catalog name first to avoid partial-name collisions.
   const padded = ` ${q} `;
+
   const matches = [...UNITS]
-    .filter(([name]) => {
-      const normalizedName = normalize(name);
-      return normalizedName.length >= 4 &&
-        padded.includes(` ${normalizedName} `);
+    .filter((unit) => {
+      const name = normalize(unit[0]);
+      return name.length >= 4 && padded.includes(` ${name} `);
     })
     .sort((a, b) => normalize(b[0]).length - normalize(a[0]).length);
 
@@ -177,38 +123,103 @@ function answerFromCatalog(question: string): string | null {
 
   const best = matches[0]!;
 
-  // If two names are equally specific, let Gemini interpret the question.
-  if (matches[1] && normalize(matches[1][0]).length === normalize(best[0]).length) {
+  if (
+    matches[1] &&
+    normalize(matches[1][0]).length === normalize(best[0]).length
+  ) {
     return null;
   }
 
-  const asksIncome = /\b(income|earn|earns|earning|make|makes|making|per second|money)\b/.test(q);
-  const asksRarity = /\b(rarity|rare|tier)\b/.test(q);
-  const asksExists = /\b(exist|exists|how many|count|quantity|stock)\b/.test(q);
-
-  if (asksIncome && asksRarity) return formatUnit(best);
-  if (asksIncome) return `${best[0]} makes ${best[2]}.`;
-  if (asksRarity) return `${best[0]} is ${best[1]} rarity.`;
-
-  if (asksExists) {
-    return best[6] == null
-      ? `The recorded existence count for ${best[0]} is unknown.`
-      : `${best[0]} has ${best[6].toLocaleString("en-US")} recorded exists.`;
+  if (fields.income || fields.rarity || fields.exists) {
+    return formatUnit(best, fields);
   }
 
-  return formatUnit(best);
+  return null;
 }
+
+const RULES: Rule[] = [
+  {
+    test: /\b(favorite|favourite|fav)\s+(brainrot|unit)\b|\b(brainrot|unit)\b.*\b(favorite|favourite|fav)\b/,
+    answer: () => "Meowl",
+  },
+  {
+    test: /\b(favorite|favourite|fav)\s+mutation\b|\bmutation\b.*\b(favorite|favourite|fav)\b/,
+    answer: () => "Unknown",
+  },
+  {
+    test: /\bcannelloni\b|hydra dragon/,
+    answer: () => "Hydra Dragon Cannelloni — Secret — $300M/s",
+  },
+  {
+    test: /\b(cat|cats|pet)\b/,
+    answer: () => "Nova",
+  },
+  {
+    test: /\b(username|handle)\b|\bwho is sammy\b/,
+    answer: () => "Sammy",
+  },
+  {
+    test: /\bstudio\b|\bcompany\b/,
+    answer: () => "Do Big Studios",
+  },
+  {
+    test: /\bgroup\b/,
+    answer: () => GAME.groupName,
+  },
+  {
+    test: /\b(owner|creator|founder|developer)\b/,
+    answer: () => "Sammy",
+  },
+  {
+    test: /\brelease date\b|\bwhen was .* released\b|\bwhen did .* release\b/,
+    answer: () => GAME.released,
+  },
+  {
+    test: /\btaco tuesday\b|\badmin abuse\b/,
+    answer: () => "Saturdays after the update, and Tuesdays at 6 PM ET (Taco Tuesday)",
+  },
+  {
+    test: /\b(newest|latest|last|recent|current) update\b|\bupdate (is )?(out|now)\b/,
+    answer: () => `Update ${latest.n}: ${latest.title} (${latest.date})`,
+  },
+  {
+    test: /\b(next|upcoming) update\b|\bwhen.*\bupdates?\b|\bupdate (time|day)\b/,
+    answer: () => "Every Saturday at 3 PM ET",
+  },
+  {
+    test: /\bactive codes?\b|\bany codes?\b|\bgame codes?\b/,
+    answer: () => codes || "No known active codes",
+  },
+  {
+    test: /\b(player record|record for most players|most players ever|peak player count|concurrent players)\b/,
+    answer: () => "25,868,678 players (Oct 11, 2025)",
+  },
+  {
+    test: /\b(platforms?|console|xbox|playstation|ps5|mobile|phone)\b/,
+    answer: () => "PC, Mac, mobile, PlayStation and Xbox",
+  },
+  {
+    test: /\bhacker\b.*\bmutation\b|\bmutation\b.*\bhacker\b/,
+    answer: () => "15× (reported)",
+  },
+  {
+    test: /\b(best|highest|strongest|top) mutation\b/,
+    answer: () => "Hacker (15×, reported)",
+  },
+  {
+    test: /\b(best|highest|rarest|top) rarity\b/,
+    answer: () => "OG",
+  },
+];
 
 export function quickAnswer(question: string): string | null {
   const q = normalize(question);
 
   if (!q || NEEDS_WEB.test(q)) return null;
 
-  // Handle catalog questions before broad general rules.
   const catalogAnswer = answerFromCatalog(question);
   if (catalogAnswer) return catalogAnswer;
 
-  // Exact Brainrot Bros recipe lookup.
   const bro = DB.bros.find((b) => q.includes(normalize(b.name)));
   if (bro) return bro.recipe;
 
