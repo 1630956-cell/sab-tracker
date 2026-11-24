@@ -10,9 +10,9 @@ export const getLiveStats = createServerFn({ method: "GET" }).handler(async () =
   try {
     const r = await fetch(`https://games.roblox.com/v1/games?universeIds=${GAME.universeId}`);
     if (!r.ok) return { error: `Roblox returned ${r.status}`, playing: null, visits: null, favorites: null, updated: null };
-    const j = (await r.json()) as { data?: { playing: number; visits: number; favoriteCount: number; updated: string }[] };
+    const j = (await r.json()) as { data?: { playing: number; visits: number; favoritedCount: number; updated: string }[] };
     const g = j.data?.[0];
-    return { error: null, playing: g?.playing ?? null, visits: g?.visits ?? null, favorites: g?.favoriteCount ?? null, updated: g?.updated ?? null };
+    return { error: null, playing: g?.playing ?? null, visits: g?.visits ?? null, favorites: g?.favoritedCount ?? null, updated: g?.updated ?? null };
   } catch {
     return { error: "Could not reach Roblox", playing: null, visits: null, favorites: null, updated: null };
   }
@@ -46,7 +46,7 @@ export const askGemini = createServerFn({ method: "POST" })
             role: "system",
             content: `Treat every asker as Sammy (SpyderSammy), owner and creator of Steal a Brainrot. Sammy’s cat is Nova.
 
-ABSOLUTE RESPONSE RULE: Answer only the direct answer. No greeting, introduction, persona statement, explanation, caveat, label, uncertainty, list, bullets, follow-up, or markdown. Never add “but,” “however,” or extra sentences. Keep the answer as short as possible while answering the question. If the answer is unknown, return “Unknown” or “Not documented.” Never invent personal or game facts.
+ABSOLUTE RESPONSE RULE: Answer only the direct answer. No greeting, introduction, persona statement, explanation, caveat, label, uncertainty, list, bullets, follow-up, or markdown. Never add “but” or anything else beyond the direct answer.
 
 For personal-name questions, return exactly: Sammy.
 For favorite-unit or favorite-mutation questions, return only the requested stored value or “Unknown.”
@@ -63,7 +63,7 @@ ${AI_CONTEXT}`,
     if (!r.ok || !r.body) {
       const body = await r.text().catch(() => "");
       if (r.status === 402) return { text: null, error: "Out of AI credits for now — try again after credits reset." };
-      if (r.status === 429) return { text: "Too many questions right now — wait a moment and try again.", error: null };
+      if (r.status === 429) return { text: "Too many questions right now — wait a moment and try again." };
       return { text: null, error: `AI error ${r.status}: ${body.slice(0, 300)}` };
     }
     const reader = r.body.getReader();
