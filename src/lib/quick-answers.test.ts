@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { quickAnswer } from "./quick-answers";
+import { UNITS } from "./codex-data";
 
 describe("quickAnswer", () => {
   it("owner name is Sammy", () => {
@@ -7,7 +8,7 @@ describe("quickAnswer", () => {
     expect(quickAnswer("who made the game")).toBe("Sammy");
   });
   it("answers the user's name only when asked", () => {
-    expect(quickAnswer("What is my name?")).toBe("Your name is Sammy.");
+    expect(quickAnswer("What is my name?")).toBe("Your name: Sammy.");
     expect(quickAnswer("What is the best obtainable OG?")).not.toContain("Sammy");
   });
   it("Sammy's cat is Nova", () => {
@@ -27,17 +28,27 @@ describe("quickAnswer", () => {
     expect(quickAnswer("What's the best mutation?")).toBe("Hacker (15×, reported)");
   });
   it("uses mutation-specific existence separately from base existence", () => {
-    expect(quickAnswer("How many Meowl exist in Gold?")).toBe("Meowl — Gold existence: 323");
+    expect(quickAnswer("How many Meowl exist in Gold?")).toContain("Meowl Gold existence: 323.");
     expect(quickAnswer("How many Meowl exist?")).toBe("4037");
   });
-  it("answers all parts of a multi-part question", () => {
-    const answer = quickAnswer("what the best obtainable og my name and meowl exist in gold");
-    expect(answer).toContain("Best currently obtainable OG: I can't confirm which OG is currently obtainable from the available game data.");
+  it("answers every intent in the multi-question example", () => {
+    const answer = quickAnswer(
+      "Any active codes? what my name meowls exist count in diamond and best secret in the game"
+    );
+    const bestSecret = UNITS
+      .filter((unit) => unit[1].toLowerCase() === "secret")
+      .sort((a, b) => b[3] - a[3])[0]!;
+
+    expect(answer).toContain("Active codes:");
+    expect(answer).toContain("None are confirmed active.");
     expect(answer).toContain("Your name: Sammy.");
-    expect(answer).toContain("Meowl Gold existence: 323.");
+    expect(answer).toContain("Meowl Diamond existence: 323.");
+    expect(answer).toContain(`Best Secret:\n${bestSecret[0]} — ${bestSecret[2]}.`);
+    expect(answer).not.toContain("4037");
+    expect(answer).not.toMatch(/BESTBRAINROTEVER|saturn/);
   });
   it("does not confirm an OG based on static obtain text", () => {
-    expect(quickAnswer("What is the best obtainable OG?")).toBe(
+    expect(quickAnswer("What is the best obtainable OG?")).toContain(
       "I can't confirm which OG is currently obtainable from the available game data."
     );
   });

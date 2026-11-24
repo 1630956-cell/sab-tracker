@@ -10,7 +10,7 @@ type Unit = (typeof UNITS)[number];
 const latest = UPDATES[0]!;
 
 const codes = DB.codes
-  .filter((c) => c.status !== "expired")
+  .filter((c) => c.status === "active")
   .map((c) => c.code)
   .join(", ");
 
@@ -236,6 +236,16 @@ function getRequestedCount(q: string): number {
   return Math.min(20, Math.max(1, Number(match?.[1] ?? 5)));
 }
 
+function bestSecretAnswer(): string {
+  const bestSecret = UNITS
+    .filter((unit) => unit[1].toLowerCase() === "secret")
+    .sort((a, b) => b[3] - a[3])[0];
+
+  return bestSecret
+    ? `Best Secret:\n${bestSecret[0]} — ${bestSecret[2]}.`
+    : "Best Secret: Unknown.";
+}
+
 function answerFromCatalog(question: string): string | null {
   const q = normalize(question);
   if (!q) return null;
@@ -316,6 +326,9 @@ function answerFromCatalog(question: string): string | null {
     /\b(best|strongest|highest|top)\b/.test(q) &&
     /\bog\b/.test(q) &&
     /\b(obtainable|obtain|available)\b/.test(q);
+  const asksBestSecret =
+    /\b(best|highest|strongest|top)\b/.test(q) &&
+    /\bsecret\b/.test(q);
   const asksUserName =
     /\bmy name\b|\bwho am i\b|\buser s name\b/.test(q);
   const mutation = fields.exists ? findRequestedMutation(q) : null;
@@ -327,13 +340,17 @@ function answerFromCatalog(question: string): string | null {
       ? [fallbackUnit]
       : [];
 
-  if (asksBestOG || asksUserName) {
+  if (asksBestOG || asksBestSecret || asksUserName) {
     const answers: string[] = [];
 
     if (asksBestOG) {
       answers.push(
         `Best currently obtainable OG: ${bestObtainableOGAnswer()}`
       );
+    }
+
+    if (asksBestSecret) {
+      answers.push(bestSecretAnswer());
     }
 
     if (asksUserName) {
@@ -494,7 +511,7 @@ const RULES: Rule[] = [
   },
   {
     test: /\bactive codes?\b|\bany codes?\b|\bgame codes?\b/,
-    answer: () => codes || "No known active codes",
+    answer: () => `Active codes:\n${codes || "None are confirmed active."}`,
   },
   {
     test:
@@ -528,23 +545,31 @@ export function quickAnswer(question: string): string | null {
 
   if (!q || NEEDS_WEB.test(q)) return null;
 
-  // Catalog facts always get checked before general rules.
+  const answers: string[] = [];
   const catalogAnswer = answerFromCatalog(question);
-  if (catalogAnswer) return catalogAnswer;
+  if (catalogAnswer) answers.push(catalogAnswer);
 
-  const bro = DB.bros.find((b) =>
-    q.includes(normalize(b.name))
-  );
-
-  if (bro) return bro.recipe;
-
+  const asksBestOG =
+    /\b(best|strongest|highest|top)\b/.test(q) &&
+    /\bog\b/.test(q) &&
+    /\b(obtainable|obtain|available)\b/.test(q);
   for (const rule of RULES) {
-    if (rule.test.test(q)) return rule.answer();
+    if (!rule.test.test(q)) continue;
+    // Catalog handling uses a labeled OG answer; don't add the same intent twice.
+    if (asksBestOG && rule.answer === bestObtainableOGAnswer) continue;
+    const answer = rule.answer();
+    if (!answers.includes(answer)) answers.push(answer);
   }
+
+  const bro = DB.bros.find((b) => q.includes(normalize(b.name)));
+  if (bro && !answers.includes(bro.recipe)) answers.push(bro.recipe);
 
   if (/\bmy name\b|\bwho am i\b|\buser s name\b/.test(q)) {
-    return "Your name is Sammy.";
+    const nameAnswer = catalogAnswer
+      ? null
+      : "Your name is Sammy.";
+    if (nameAnswer && !answers.includes(nameAnswer)) answers.push(nameAnswer);
   }
 
-  return null;
+  return answers.length ? answers.join("\n\n") : null;
 }
