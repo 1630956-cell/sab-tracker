@@ -565,6 +565,7 @@ export function shouldDelegateToAi(question: string): boolean {
     /\b(cat|cats|pet)\b/,
     /\b(favorite|favourite|fav)\b/,
     /\b(owner|creator|founder|developer)\b/,
+    /\b(favorite|favourite|fav)\b.*\b(taco|food|meal)\b/,
   ];
 
   const intentCount = intentPatterns.filter((pattern) => pattern.test(q)).length;

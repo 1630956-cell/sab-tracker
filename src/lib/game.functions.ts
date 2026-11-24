@@ -19,6 +19,23 @@ function formatAiAnswer(text: string): string {
     .trim() || "Unknown";
 }
 
+function hasMultipleIntents(question: string): boolean {
+  const q = question.toLowerCase();
+  const patterns = [
+    /\b(active codes?|game codes?)\b/i,
+    /\b(my name|your name|who am i|username)\b/i,
+    /\b(favorite|favourite|fav)\b.*\b(taco|food|meal)\b/i,
+    /\b(favorite|favourite|fav)\b.*\b(brainrot|unit|character)\b/i,
+    /\b(taco|food|meal)\b/i,
+    /\b(brainrot|unit|character)\b/i,
+  ];
+  const matched = patterns.map((pattern) => pattern.test(q));
+  // Treat a favorite taco/Brainrot phrase as one intent, not two overlapping matches.
+  const intentCount = Number(matched[0]) + Number(matched[1]) +
+    Number(matched[2] || matched[4]) + Number(matched[3] || matched[5]);
+  return intentCount >= 2;
+}
+
 export const getLiveStats = createServerFn({ method: "GET" }).handler(async () => {
   try {
     const r = await fetch(`https://games.roblox.com/v1/games?universeIds=${GAME.universeId}`);
@@ -42,7 +59,8 @@ export const askGemini = createServerFn({ method: "POST" })
     } catch { /* no request context */ }
     const refused = guard(data.prompt, tracker, who);
     if (refused) return { text: refused, error: null };
-    const delegateToAi = shouldDelegateToAi(data.prompt);
+    const multipleIntents = hasMultipleIntents(data.prompt);
+    const delegateToAi = multipleIntents || shouldDelegateToAi(data.prompt);
 
     if (!delegateToAi) {
       const quick = quickAnswer(data.prompt);
@@ -51,7 +69,7 @@ export const askGemini = createServerFn({ method: "POST" })
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { text: null, error: "AI is not set up for this app yet." };
     const needsSearch =
-      /\b(latest|newest|today|tonight|right now|currently|live|leak|leaks|leaked|rumou?r|news|upcoming|next update|player count|how many players|just announced|recently announced)\b/i.test(data.prompt);
+      /\b(latest|newest|today|tonight|right now|currently|live|leak|leaks|leaked|rumou?r|news|upcoming|next update|player count|how many players|just announced|recently announced|active codes?)\b/i.test(data.prompt);
     const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}`, "X-Lovable-AI-SDK": "fetch" },
@@ -102,7 +120,25 @@ Do not repeat the question.
 Do not add unnecessary introductions, conclusions, or filler.
 Do not omit important facts just to make an answer shorter.
 Use normal spacing and punctuation.
-Only use lists when the user explicitly requests them or when they genuinely improve clarity.`,
+Only use lists when the user explicitly requests them or when they genuinely improve clarity.
+
+MULTI-INTENT ANSWERING:
+
+Always identify every separate question or requested fact in the user's message.
+
+Answer EVERY requested part. Never stop after answering the first recognized fact.
+
+Use the existing custom identity and personalization instructions as the source of personal facts.
+
+Use verified game data for game-related facts.
+
+Use Google Search when current information, such as active game codes, is needed.
+
+If a requested fact is unknown, clearly say it is unknown rather than silently skipping it or inventing an answer.
+
+Keep the response short and connected. Do not repeat the question or add unnecessary explanations.
+
+Before responding, verify that every requested part has been answered.`,
           },
           { role: "user", content: data.prompt },
         ],
