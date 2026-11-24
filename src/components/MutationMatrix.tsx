@@ -29,8 +29,8 @@ export function MutationMatrix({ perSec, unitName = "", inline = false }: { perS
   const pickedExact = pickedDef ? (pickedDef.multiplier != null ? perSec * pickedDef.multiplier : null) : null;
   const pickedEstimate = pickedDef && pickedExact == null && pickedDef.reported != null ? perSec * pickedDef.reported : null;
   return (
-    <div className={inline ? "space-y-1.5" : "mt-2 space-y-1.5"}>
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div className={`w-full min-w-0 max-w-full ${inline ? "space-y-1.5" : "mt-2 space-y-1.5"}`}>
+      <div className="flex w-full min-w-0 max-w-full items-center gap-1.5 overflow-x-auto overscroll-x-contain pb-2 touch-pan-x">
         <button
           onClick={() => setPicked(picked === "Default" ? null : "Default")}
           className={`shrink-0 rounded-md border px-2 py-1 font-mono text-[11px] font-bold transition ${
@@ -102,7 +102,7 @@ export function MutationToggle({ perSec, unitName = "" }: { perSec: number; unit
   const [open, setOpen] = useState(false);
   if (!perSec) return null;
   return (
-    <div className="mt-1">
+    <div className="mt-1 w-full min-w-0 max-w-full">
       <button
         onClick={() => setOpen((v) => !v)}
         className="flex w-full items-center justify-between rounded-lg bg-secondary/60 px-2.5 py-1.5 text-[11px] font-medium transition hover:bg-secondary"
