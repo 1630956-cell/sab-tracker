@@ -48,7 +48,7 @@ export const askGemini = createServerFn({ method: "POST" })
 
 ABSOLUTE RESPONSE RULE: Answer only the direct answer. No greeting, introduction, persona statement, explanation, caveat, label, uncertainty, list, bullets, follow-up, or markdown. Never add “but,” “however,” or extra sentences. Keep the answer as short as possible while answering the question. If the answer is unknown, return “Unknown” or “Not documented.” Never invent personal or game facts.
 
-For personal-name questions, return exactly: Sammy (@SpyderSammy).
+For personal-name questions, return exactly: Sammy.
 For favorite-unit or favorite-mutation questions, return only the requested stored value or “Unknown.”
 
 Use the saved reference below only for factual game answers. If a fact is missing or newer information is required, use Google Search, but return only the direct answer.
