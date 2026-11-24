@@ -6,19 +6,17 @@ import { guard, RepeatTracker } from "./abuse-guard";
 
 const tracker = new RepeatTracker();
 
-function formatRiddleAnswer(text: string): string {
+function formatAiAnswer(text: string): string {
   return text
+    .replace(/\r\n/g, "\n")
     .replace(/\*\*|__/g, "")
-    .replace(/```[\s\S]*?```/g, "")
-    .split(/\r?\n/)
+    .replace(/\n{2,}/g, "\n")
+    .split("\n")
     .map((line) => line.trim())
     .filter(Boolean)
-    .join("")
-    .trim();
-}
-
-function isCompositeRiddle(question: string): boolean {
-  return /\b(riddle|riddles|puzzle|puzzles|decode|decipher|brain teaser)\b/i.test(question);
+    .join(" ")
+    .replace(/\s{2,}/g, " ")
+    .trim() || "Unknown";
 }
 
 export const getLiveStats = createServerFn({ method: "GET" }).handler(async () => {
@@ -93,7 +91,18 @@ MULTI-PART QUESTION AND RIDDLE HANDLING:
 - Never substitute a Brainrot's base existence count for its mutation count.
 - Never invent unavailable game facts.
 - For riddles, output only the combined final answer.
-- For independent questions, output only their direct answers in order.`,
+- For independent questions, output only their direct answers in order.
+
+RESPONSE STYLE:
+Keep every answer concise, direct, and natural.
+Prefer the shortest complete answer that accurately answers the question.
+Keep related information together in connected sentences.
+Avoid unnecessary line breaks, separate paragraphs, headings, and bullet points.
+Do not repeat the question.
+Do not add unnecessary introductions, conclusions, or filler.
+Do not omit important facts just to make an answer shorter.
+Use normal spacing and punctuation.
+Only use lists when the user explicitly requests them or when they genuinely improve clarity.`,
           },
           { role: "user", content: data.prompt },
         ],
@@ -125,11 +134,6 @@ MULTI-PART QUESTION AND RIDDLE HANDLING:
         } catch { /* partial frame */ }
       }
     }
-    const isRiddle = isCompositeRiddle(data.prompt);
-
-    const final = isRiddle
-      ? formatRiddleAnswer(text) || "Unknown"
-      : text.replace(/\*\*|__|^[-*]\s+/gm, "").trim() || "Unknown";
-
+    const final = formatAiAnswer(text);
     return { text: final, error: null };
   });
