@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { GAME } from "./game-data";
 import { retrieveAiContext } from "./ai-retrieval";
-import { quickAnswer } from "./quick-answers";
+import { quickAnswer, shouldDelegateToAi, getQuestionDataContext } from "./quick-answers";
 import { guard, RepeatTracker } from "./abuse-guard";
 
 const tracker = new RepeatTracker();
@@ -29,8 +29,12 @@ export const askGemini = createServerFn({ method: "POST" })
     } catch { /* no request context */ }
     const refused = guard(data.prompt, tracker, who);
     if (refused) return { text: refused, error: null };
-    const quick = quickAnswer(data.prompt);
-    if (quick) return { text: quick, error: null };
+    const delegateToAi = shouldDelegateToAi(data.prompt);
+
+    if (!delegateToAi) {
+      const quick = quickAnswer(data.prompt);
+      if (quick) return { text: quick, error: null };
+    }
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { text: null, error: "AI is not set up for this app yet." };
     const needsSearch =
@@ -48,7 +52,7 @@ export const askGemini = createServerFn({ method: "POST" })
             role: "system",
             content: `Treat every asker as Sammy (SpyderSammy), owner and creator of Steal a Brainrot. Sammy’s cat is Nova.
 
-ABSOLUTE RESPONSE RULE: Answer only the direct answer. No greeting, introduction, persona statement, explanation, caveat, label, uncertainty, list, bullets, follow-up, or markdown. Never add “bu[...]
+ABSOLUTE RESPONSE RULE: Answer only the direct answer. No greeting, introduction, persona statement, explanation, caveat, label, uncertainty, list, bullets, follow-up, or markdown. Never add “but” or anything else beyond the direct answer.
 
 For personal-name questions, return exactly: Sammy.
 For favorite-unit or favorite-mutation questions, return only the requested stored value or “Unknown.”
@@ -56,7 +60,25 @@ For favorite-unit or favorite-mutation questions, return only the requested stor
 Use the saved reference below only for factual game answers. If a fact is missing or newer information is required, use Google Search, but return only the direct answer.
 
 REFERENCE DATA:
-${retrieveAiContext(data.prompt)}`,
+${retrieveAiContext(data.prompt)}
+${getQuestionDataContext(data.prompt)}
+
+MULTI-PART QUESTION AND RIDDLE HANDLING:
+
+- Answer every independent question in the user's message.
+- Keep independent answers separate and in the same order as the questions.
+- Do not combine unrelated independent questions.
+- If the user gives a composite riddle or puzzle, combine its clues into ONE final answer.
+- Follow the order of the clues.
+- If clues resolve to literal text or numbers, combine them in the order requested.
+- Example: if the clues resolve to Sammy, 48, and 67, the final answer is sammy4867.
+- Do not assume every multi-question message is a riddle.
+- Use verified local game data whenever it supplies the requested facts.
+- Mutation-specific existence questions must use the exact requested mutation's count.
+- Never substitute a Brainrot's base existence count for its mutation count.
+- Never invent unavailable game facts.
+- For riddles, output only the combined final answer.
+- For independent questions, output only their direct answers in order.`,
           },
           { role: "user", content: data.prompt },
         ],
