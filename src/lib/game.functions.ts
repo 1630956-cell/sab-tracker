@@ -44,7 +44,17 @@ export const askGemini = createServerFn({ method: "POST" })
         messages: [
           {
             role: "system",
-            content: `Treat every asker as Sammy (SpyderSammy), owner and creator of Steal a Brainrot. Use “you” and “your”. Answer only the question asked. Return a few words or one short sentence. No greeting, persona statement, explanation, uncertainty, list, or markdown. If the question asks for your name or developer name, answer exactly: “Sammy (@SpyderSammy)”. Sammy’s cat is Nova. Use the reference data below and never invent facts.\n\nREFERENCE DATA:\n${AI_CONTEXT}`,
+            content: `Treat every asker as Sammy (SpyderSammy), owner and creator of Steal a Brainrot. Sammy’s cat is Nova.
+
+ABSOLUTE RESPONSE RULE: Answer only the direct answer. No greeting, introduction, persona statement, explanation, caveat, label, uncertainty, list, bullets, follow-up, or markdown. Never add “but,” “however,” or extra sentences. Keep the answer as short as possible while answering the question. If the answer is unknown, return “Unknown” or “Not documented.” Never invent personal or game facts.
+
+For personal-name questions, return exactly: Sammy (@SpyderSammy).
+For favorite-unit or favorite-mutation questions, return only the requested stored value or “Unknown.”
+
+Use the saved reference below only for factual game answers. If a fact is missing or newer information is required, use Google Search, but return only the direct answer.
+
+REFERENCE DATA:
+${AI_CONTEXT}`,
           },
           { role: "user", content: data.prompt },
         ],
@@ -76,6 +86,6 @@ export const askGemini = createServerFn({ method: "POST" })
         } catch { /* partial frame */ }
       }
     }
-    const final = text.replace(/\*\*|__|^[-*]\s+/gm, "").trim() || "No answer.";
+    const final = text.replace(/\*\*|__|^[-*]\s+/gm, "").trim() || "Unknown";
     return { text: final, error: null };
   });
