@@ -6,6 +6,21 @@ import { guard, RepeatTracker } from "./abuse-guard";
 
 const tracker = new RepeatTracker();
 
+function formatRiddleAnswer(text: string): string {
+  return text
+    .replace(/\*\*|__/g, "")
+    .replace(/```[\s\S]*?```/g, "")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("")
+    .trim();
+}
+
+function isCompositeRiddle(question: string): boolean {
+  return /\b(riddle|riddles|puzzle|puzzles|decode|decipher|brain teaser)\b/i.test(question);
+}
+
 export const getLiveStats = createServerFn({ method: "GET" }).handler(async () => {
   try {
     const r = await fetch(`https://games.roblox.com/v1/games?universeIds=${GAME.universeId}`);
@@ -110,6 +125,11 @@ MULTI-PART QUESTION AND RIDDLE HANDLING:
         } catch { /* partial frame */ }
       }
     }
-    const final = text.replace(/\*\*|__|^[-*]\s+/gm, "").trim() || "Unknown";
+    const isRiddle = isCompositeRiddle(data.prompt);
+
+    const final = isRiddle
+      ? formatRiddleAnswer(text) || "Unknown"
+      : text.replace(/\*\*|__|^[-*]\s+/gm, "").trim() || "Unknown";
+
     return { text: final, error: null };
   });
