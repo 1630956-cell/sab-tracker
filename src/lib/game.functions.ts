@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { GAME } from "./game-data";
-import { AI_CONTEXT } from "./ai-context";
+import { retrieveAiContext } from "./ai-retrieval";
 import { quickAnswer } from "./quick-answers";
 import { guard, RepeatTracker } from "./abuse-guard";
 
@@ -54,7 +54,7 @@ For favorite-unit or favorite-mutation questions, return only the requested stor
 Use the saved reference below only for factual game answers. If a fact is missing or newer information is required, use Google Search, but return only the direct answer.
 
 REFERENCE DATA:
-${AI_CONTEXT}`,
+${retrieveAiContext(data.prompt)}`,
           },
           { role: "user", content: data.prompt },
         ],
