@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { DB } from "@/lib/brainrot-db";
+import { UNITS } from "@/lib/codex-data";
 
 type Row = { a: string; b: string; tag?: string };
 type Section = { id: string; title: string; rows: Row[] };
@@ -12,6 +13,17 @@ function monthLabel(ym: string) {
 
 const SECTIONS: Section[] = [
   { id: "newest", title: "New Brainrots — update 76", rows: DB.newest.map((n) => ({ a: n.name, b: n.note, tag: "new" })) },
+  {
+    id: "exists",
+    title: "Leaked Exist Counts (Rarest Brainrots)",
+    rows: UNITS.filter((u) => u[6] != null)
+      .sort((a, b) => (a[6] ?? 1e9) - (b[6] ?? 1e9))
+      .map((u) => ({
+        a: `${u[0]} (${u[1]})`,
+        b: `${u[6]?.toLocaleString()} exist · Income: ${u[2] || "—"} · ${u[4]}`,
+        tag: (u[6] ?? 1e9) < 10000 ? "Grail" : "Rare",
+      })),
+  },
   { id: "upcoming", title: "Coming up", rows: DB.upcoming.map((u) => ({ a: u.when, b: u.event, tag: u.status })) },
   { id: "sammy", title: "Sammy — everything known", rows: DB.sammy.map((s) => ({ a: s.label, b: s.value })) },
   { id: "obtain", title: "Every way to get a Brainrot", rows: DB.obtain.map((o) => ({ a: o.method, b: o.how })) },
