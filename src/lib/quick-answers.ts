@@ -540,6 +540,67 @@ const RULES: Rule[] = [
   },
 ];
 
+/**
+ * Detect composite questions and riddles that need Gemini.
+ * Simple factual questions remain handled by quickAnswer.
+ */
+export function shouldDelegateToAi(question: string): boolean {
+  const q = normalize(question);
+
+  if (!q) return false;
+
+  // Current/live questions should continue through the existing AI/search path.
+  if (NEEDS_WEB.test(q)) return false;
+
+  // Explicit puzzle or riddle requests.
+  if (/\b(riddle|riddles|puzzle|puzzles|decode|decipher|brain teaser)\b/i.test(q)) {
+    return true;
+  }
+
+  const intentPatterns = [
+    /\bmy name\b|\bwho am i\b|\busername\b|\bhandle\b/,
+    /\bactive codes?\b|\bany codes?\b|\bgame codes?\b/,
+    /\b(best|strongest|highest|top)\b.*\bsecret\b|\bsecret\b.*\b(best|strongest|highest|top)\b/,
+    /\b(income|earn|earning|per second|rarity|exists|existence|how many|count|quantity|stock)\b/,
+    /\b(cat|cats|pet)\b/,
+    /\b(favorite|favourite|fav)\b/,
+    /\b(owner|creator|founder|developer)\b/,
+  ];
+
+  const intentCount = intentPatterns.filter((pattern) => pattern.test(q)).length;
+
+  if (intentCount >= 2) return true;
+
+  // Multiple named Brainrots in one question need combined interpretation.
+  if (findAllUnits(question, UNITS).length > 1) return true;
+
+  // A mutation count combined with another numeric clue.
+  const hasMutation = findRequestedMutation(q) !== null;
+  const hasUnit = findAllUnits(question, UNITS).length > 0;
+  const hasNumberClue = /\b(?:and|plus|then)\s+\d+\b/.test(q);
+
+  return hasMutation && hasUnit && hasNumberClue;
+}
+
+/**
+ * Give Gemini verified local answers as additional factual context.
+ */
+export function getQuestionDataContext(question: string): string {
+  const verifiedAnswer = quickAnswer(question);
+
+  if (!verifiedAnswer) return "";
+
+  return `
+VERIFIED LOCAL GAME DATA FOR THIS QUESTION:
+${verifiedAnswer}
+
+These values were calculated using the existing local game database.
+Use them as authoritative facts.
+Never replace a mutation-specific existence count with a base existence count.
+Never invent missing values.
+`;
+}
+
 export function quickAnswer(question: string): string | null {
   const q = normalize(question);
 
