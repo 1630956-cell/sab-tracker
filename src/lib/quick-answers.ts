@@ -46,11 +46,6 @@ export function getSammyPersonalFactsAnswer(question: string): string | null {
     : null;
 }
 
-  if (facts.length === 0) return null;
-  facts.sort((a, b) => a.position - b.position);
-  return [...new Set(facts.map((fact) => fact.answer))].join(", ");
-}
-
 function requestedFields(q: string) {
   return {
     income: /\b(income|earn|earns|earning|per second|money|makes|make|making|\/s)\b/.test(q),
