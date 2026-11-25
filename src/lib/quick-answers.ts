@@ -222,7 +222,7 @@ const RULES: Rule[] = [
   { test: /\b(?:what is|what's|tell me)\b.*\b(?:my )?(?:favorite|favourite|fav)\s+(?:brainrot|unit)\b|\bmy (?:favorite|favourite|fav)\s+(?:brainrot|unit)\b/i, answer: () => "Meowl" },
   { test: /\b(?:what is|what's|tell me)\b.*\b(?:my )?(?:favorite|favourite|fav)\s+mutation\b|\bmy (?:favorite|favourite|fav)\s+mutation\b/i, answer: () => "Ying Yang" },
   { test: /\bcannelloni\b|hydra dragon/, answer: () => "Hydra Dragon Cannelloni — Secret — $300M/s" },
-  { test: /\b(?:what is|what's|name|who is|which is)\b.*\b(?:cat|cats|pet)\b|\b(?:cat|cats|pet)\b.*\b(?:name|called|is it)\b/i, answer: () => "Nova" },
+{ test: /\b(?:what is|what's|name|who is|which is)\b.*\b(?:my )?(?:cat|cats|pet)(?:'s)?\b|\b(?:my )?(?:cat|cats|pet)(?:'s)?\b.*\b(?:name|called|is it)\b/i, answer: () => "Nova" },
   { test: /\b(?:username|handle)\b|\bwho is sammy\b/i, answer: () => "Sammy" },
   { test: /\bstudio\b|\bcompany\b/, answer: () => "Do Big Studios" },
   { test: /\bgroup\b/, answer: () => GAME.groupName },
@@ -271,11 +271,11 @@ export function getQuestionDataContext(question: string): string {
 
 export function quickAnswer(question: string): string | null {
   const personalAnswer = getSammyPersonalFactsAnswer(question);
-  if (personalAnswer !== null) return personalAnswer;
   const q = normalize(question);
   if (!q || NEEDS_WEB.test(q)) return null;
   if (/\bhacker elephant\b.*\b(exist|exists|confirmed|count|how many)\b|\b(exist|exists|confirmed|count|how many)\b.*\bhacker elephant\b/.test(q)) return "1";
   const answers: string[] = [];
+  if (personalAnswer) answers.push(personalAnswer);
   const catalogAnswer = answerFromCatalog(question);
   if (catalogAnswer) answers.push(catalogAnswer);
   const asksBestOG = /\b(best|strongest|highest|top)\b/.test(q) && /\bog\b/.test(q) && /\b(obtainable|obtain|available)\b/.test(q);
