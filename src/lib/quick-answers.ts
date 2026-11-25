@@ -176,7 +176,6 @@ function answerFromCatalog(question: string): string | null {
     const answers: string[] = [];
     if (asksBestOG) answers.push(`Best currently obtainable OG: ${bestObtainableOGAnswer()}`);
     if (asksBestSecret) answers.push(bestSecretAnswer());
-    if (asksUserName) answers.push("Your name: Sammy.");
     if (fields.income || fields.rarity || fields.exists) {
       for (const unit of units) {
         const unitFields = { ...fields, exists: fields.exists && !mutation };
