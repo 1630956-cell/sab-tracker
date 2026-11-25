@@ -25,7 +25,7 @@ const SAMMY_FACTS = {
 export function getSammyPersonalFactsAnswer(question: string): string | null {
   const q = question.toLowerCase();
   const facts: { key: string; position: number; answer: string }[] = [];
-  const nameMatch = /\b(my name|what(?:'s| is) my name|who am i)\b/.exec(q);
+  const nameMatch = /\b(my name|what(?:'s| is) my name|who am i|my username|what(?:'s| is) my username|my handle|what(?:'s| is) my handle)\b/.exec(q);
   const brainrotMatch = /\b(?:fav(?:ou?rite)?\s+(?:brainrot|brain\s?rot)|(?:brainrot|brain\s?rot)\s+(?:is\s+)?my fav(?:ou?rite)?)\b/.exec(q);
   const mutationMatch = /\b(?:fav(?:ou?rite)?\s+mutation|mutation\s+(?:is\s+)?my fav(?:ou?rite)?)\b/.exec(q);
 
@@ -223,7 +223,7 @@ const RULES: Rule[] = [
   { test: /\b(?:what is|what's|tell me)\b.*\b(?:my )?(?:favorite|favourite|fav)\s+mutation\b|\bmy (?:favorite|favourite|fav)\s+mutation\b/i, answer: () => "Ying Yang" },
   { test: /\bcannelloni\b|hydra dragon/, answer: () => "Hydra Dragon Cannelloni — Secret — $300M/s" },
   { test: /\b(?:what is|what's|name|who is|which is)\b.*\b(?:cat|cats|pet)\b|\b(?:cat|cats|pet)\b.*\b(?:name|called|is it)\b/i, answer: () => "Nova" },
-  { test: /\b(?:what is|what's|tell me)\b.*\b(?:my )?(?:username|handle)\b|\bwho is sammy\b/i, answer: () => "Sammy" },
+  { test: /\b(?:username|handle)\b|\bwho is sammy\b/i, answer: () => "Sammy" },
   { test: /\bstudio\b|\bcompany\b/, answer: () => "Do Big Studios" },
   { test: /\bgroup\b/, answer: () => GAME.groupName },
   { test: /\b(?:who is|who's|name|who created|who owns)\b.*\b(?:owner|creator|founder|developer)\b|\b(?:owner|creator|founder|developer)\b.*\b(?:who|name)\b/i, answer: () => "Sammy" },
