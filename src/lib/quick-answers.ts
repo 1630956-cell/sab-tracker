@@ -291,7 +291,8 @@ export function quickAnswer(question: string): string | null {
     if (!rule.test.test(q)) continue;
     if (asksBestOG && rule.answer === bestObtainableOGAnswer) continue;
     const answer = rule.answer();
-    if (!answers.includes(answer)) answers.push(answer);
+if (personalAnswer && personalAnswer.split(", ").includes(answer)) continue;
+if (!answers.includes(answer)) answers.push(answer);
   }
   const bro = DB.bros.find((b) => q.includes(normalize(b.name)));
   if (bro && !answers.includes(bro.recipe)) answers.push(bro.recipe);
