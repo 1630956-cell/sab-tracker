@@ -10,6 +10,16 @@ function formatAiAnswer(text: string): string {
   return text.replace(/\r\n/g, "\n").trim() || "No response received.";
 }
 
+function cleanAiAnswer(text: string): string {
+  return text
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/^\s{0,3}#{1,6}\s*(Clue Breakdown|Breakdown|Explanation|Reasoning)\s*:?.*$/gim, "")
+    .replace(/^\s*(Clue Breakdown|Breakdown|Explanation|Reasoning)\s*:.*$/gim, "")
+    .replace(/^\s*[-*]\s*(Name|Favorite Brainrot|Favorite Kind of Tacos)\s*:.*$/gim, "")
+    .replace(/^\s*---+\s*$/gm, "")
+    .trim();
+}
+
 export const getLiveStats = createServerFn({ method: "GET" }).handler(async () => {
   try {
     const r = await fetch(`https://games.roblox.com/v1/games?universeIds=${GAME.universeId}`);
@@ -79,6 +89,30 @@ STANDARD QUESTIONS:
 - Never invent fake exist counts or made-up unit stats. If a count is unpublished, say it is unpublished.
 - Use Google Search to check active codes, new leaks, upcoming rumors, or recent Discord announcements.
 
+DIRECT ANSWER MODE:
+
+Always provide the final answer directly.
+
+Never include:
+- Clue breakdowns
+- Explanations of how you found the answer
+- Reasoning or step-by-step analysis
+- Repeated clues
+- Alternative answers in parentheses
+- Unrequested headings
+- Unrequested bullet points
+- Markdown separators
+
+When multiple facts are requested, combine them into one short, natural answer.
+
+Do not expose internal reasoning.
+
+Keep answers concise while preserving all requested information.
+
+These rules apply globally to every response, not just riddles or personalized questions.
+
+Return only the answer unless the user explicitly requests an explanation.
+
 REFERENCE DATA:
 ${retrieveAiContext(data.prompt)}
 ${getQuestionDataContext(data.prompt)}`,
@@ -116,6 +150,6 @@ ${getQuestionDataContext(data.prompt)}`,
       }
     }
 
-    const final = formatAiAnswer(text);
+    const final = formatAiAnswer(cleanAiAnswer(text));
     return { text: final, error: null };
   });
