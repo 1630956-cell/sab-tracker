@@ -25,18 +25,26 @@ const SAMMY_FACTS = {
 export function getSammyPersonalFactsAnswer(question: string): string | null {
   const q = question.toLowerCase();
   const facts: { key: string; position: number; answer: string }[] = [];
+
   const nameMatch = /\b(my name|what(?:'s| is) my name|who am i|my username|what(?:'s| is) my username|my handle|what(?:'s| is) my handle)\b/.exec(q);
-  const brainrotMatch = /\b(?:fav(?:ou?rite)?\s+(?:brainrot|brain\s?rot)|(?:brainrot|brain\s?rot)\s+(?:is\s+)?my fav(?:ou?rite)?)\b/.exec(q);
-  const mutationMatch = /\b(?:fav(?:ou?rite)?\s+mutation|mutation\s+(?:is\s+)?my fav(?:ou?rite)?)\b/.exec(q);
+
+  const catMatch = /\b(?:my\s+)?(?:cat|cats|pet)(?:'s)?\s+(?:name|called)\b|\b(?:what(?:'s| is)|tell me)\b.*\b(?:my\s+)?(?:cat|cats|pet)\b/i.exec(q);
+
+  const brainrotMatch = /\b(?:my\s+)?fav(?:ou?rite)?\s+(?:brainrot|brain\s?rot)\b|\b(?:brainrot|brain\s?rot)\s+(?:is\s+)?my fav(?:ou?rite)?\b/.exec(q);
+
+  const mutationMatch = /\b(?:my\s+)?fav(?:ou?rite)?\s+mutation\b|\bmutation\s+(?:is\s+)?my fav(?:ou?rite)?\b/.exec(q);
 
   if (nameMatch) facts.push({ key: "name", position: nameMatch.index, answer: SAMMY_FACTS.name });
+  if (catMatch) facts.push({ key: "cat", position: catMatch.index, answer: "Nova" });
   if (brainrotMatch) facts.push({ key: "brainrot", position: brainrotMatch.index, answer: SAMMY_FACTS.favoriteBrainrot });
+  if (mutationMatch) facts.push({ key: "mutation", position: mutationMatch.index, answer: SAMMY_FACTS.favoriteMutation });
 
-  if (!mutationMatch && /\bmutation\b/.test(q) && /\b(?:fav|favorite|favourite)\b/.test(q)) {
-    facts.push({ key: "mutation", position: q.indexOf("mutation"), answer: SAMMY_FACTS.favoriteMutation });
-  } else if (mutationMatch) {
-    facts.push({ key: "mutation", position: mutationMatch.index, answer: SAMMY_FACTS.favoriteMutation });
-  }
+  facts.sort((a, b) => a.position - b.position);
+
+  return facts.length
+    ? [...new Map(facts.map((fact) => [fact.key, fact.answer])).values()].join(", ")
+    : null;
+}
 
   if (facts.length === 0) return null;
   facts.sort((a, b) => a.position - b.position);
