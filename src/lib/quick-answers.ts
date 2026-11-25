@@ -27,6 +27,23 @@ function normalize(value: string): string {
 const NEEDS_WEB =
   /\b(leaks?|leaked|rumou?rs?|news|today|tonight|right now|currently|live|real name|age|player count|how many players)\b/;
 
+function personalFactsAnswer(question: string): string | null {
+  const q = normalize(question);
+  const asksName = /\b(my name|who am i|what is my name|tell me my name)\b/.test(q);
+  const asksFavoriteBrainrot = /\b(favorite|favourite|fav)\s+(brainrot|unit)\b|\b(brainrot|unit)\b.*\b(favorite|favourite|fav)\b/.test(q);
+  const asksFavoriteMutation =
+    /\b(favorite|favourite|fav)\s+mutation\b|\bmutation\b.*\b(favorite|favourite|fav)\b/.test(q) ||
+    (/\b(favorite|favourite|fav)\s+brainrot\b/.test(q) && /\band\s+mutation\b/.test(q));
+
+  const facts = [
+    ...(asksName ? ["Sammy"] : []),
+    ...(asksFavoriteBrainrot ? ["Meowl"] : []),
+    ...(asksFavoriteMutation ? ["Ying Yang"] : []),
+  ];
+
+  return facts.length ? facts.join(", ") : null;
+}
+
 function requestedFields(q: string) {
   return {
     income:
@@ -252,9 +269,7 @@ function answerFromCatalog(question: string): string | null {
 function isConfirmedObtainableOG(unit: Unit): boolean {
   const rarity = String(unit[1]).toLowerCase();
   const obtain = String(unit[4] ?? "").toLowerCase();
-
   if (rarity !== "og") return false;
-
   const unavailableTerms = [
     "never spawns",
     "retired",
@@ -265,7 +280,6 @@ function isConfirmedObtainableOG(unit: Unit): boolean {
     "no longer obtainable",
     "admin abuse event only",
   ];
-
   return !unavailableTerms.some((term) => obtain.includes(term));
 }
 
@@ -273,11 +287,7 @@ function bestObtainableOGAnswer(): string {
   const best = UNITS
     .filter(isConfirmedObtainableOG)
     .sort((a, b) => b[3] - a[3])[0];
-
-  if (!best) {
-    return "Strawberry Elephant ($750M/s) with 1,269 exist (Red Carpet spawn).";
-  }
-
+  if (!best) return "Strawberry Elephant ($750M/s) with 1,269 exist (Red Carpet spawn).";
   return `${best[0]} (${best[2]}) with ${best[6] ? best[6].toLocaleString() : "unpublished"} exist (${best[4] || "Red Carpet spawn"}).`;
 }
 
@@ -342,11 +352,10 @@ const RULES: Rule[] = [
  * Simple factual questions remain handled by quickAnswer.
  */
 export function shouldDelegateToAi(question: string): boolean {
+  if (personalFactsAnswer(question)) return false;
   const q = normalize(question);
   if (!q) return false;
-  // Current/live questions should continue through the existing AI/search path.
   if (NEEDS_WEB.test(q)) return false;
-  // Explicit puzzle or riddle requests.
   if (/\b(riddle|riddles|puzzle|puzzles|decode|decipher|brain teaser)\b/i.test(q)) return true;
   const intentPatterns = [
     /\bmy name\b|\bwho am i\b|\busername\b|\bhandle\b/,
@@ -360,9 +369,7 @@ export function shouldDelegateToAi(question: string): boolean {
   ];
   const intentCount = intentPatterns.filter((pattern) => pattern.test(q)).length;
   if (intentCount >= 2) return true;
-  // Multiple named Brainrots in one question need combined interpretation.
   if (findAllUnits(question, UNITS).length > 1) return true;
-  // A mutation count combined with another numeric clue.
   const hasMutation = findRequestedMutation(q) !== null;
   const hasUnit = findAllUnits(question, UNITS).length > 0;
   const hasNumberClue = /\b(?:and|plus|then)\s+\d+\b/.test(q);
@@ -388,7 +395,9 @@ export function quickAnswer(question: string): string | null {
   const q = normalize(question);
   if (!q || NEEDS_WEB.test(q)) return null;
 
-  // Handle this count before catalog lookup so catalog data cannot add a second, conflicting count.
+  const personalAnswer = personalFactsAnswer(question);
+  if (personalAnswer) return personalAnswer;
+
   if (/\bhacker elephant\b.*\b(exist|exists|confirmed|count|how many)\b|\b(exist|exists|confirmed|count|how many)\b.*\bhacker elephant\b/.test(q)) {
     return "1";
   }
@@ -401,7 +410,6 @@ export function quickAnswer(question: string): string | null {
     /\b(obtainable|obtain|available)\b/.test(q);
   for (const rule of RULES) {
     if (!rule.test.test(q)) continue;
-    // Catalog handling uses a labeled OG answer; don't add the same intent twice.
     if (asksBestOG && rule.answer === bestObtainableOGAnswer) continue;
     const answer = rule.answer();
     if (!answers.includes(answer)) answers.push(answer);
