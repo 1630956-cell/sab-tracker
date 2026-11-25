@@ -39,14 +39,14 @@ export const askGemini = createServerFn({ method: "POST" })
       who = getRequestHeader("cf-connecting-ip") ?? getRequestHeader("x-forwarded-for")?.split(",")[0]?.trim() ?? "anon";
     } catch { /* no request context */ }
 
-    const refused = guard(data.prompt, tracker, who);
-    if (refused) return { text: refused, error: null };
+// Instant offline answer for single obvious questions (<0.01s)
+if (!shouldDelegateToAi(data.prompt)) {
+  const quick = quickAnswer(data.prompt);
+  if (quick) return { text: quick, error: null };
+}
 
-    // Instant offline answer for single obvious questions (<0.01s)
-    if (!shouldDelegateToAi(data.prompt)) {
-      const quick = quickAnswer(data.prompt);
-      if (quick) return { text: quick, error: null };
-    }
+const refused = guard(data.prompt, tracker, who);
+if (refused) return { text: refused, error: null };
 
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { text: null, error: "AI is not set up for this app yet." };
