@@ -172,8 +172,6 @@ function answerFromCatalog(question: string): string | null {
   }
 
   const asksRanking = /\b(top|richest|highest earning|highest income|most profitable|best earning)\b/.test(q) && /\b(brainrot|brainrots|unit|units|earner|earners)\b/.test(q);
-  
-  const asksRanking = /\b(top|richest|highest earning|highest income|most profitable|best earning)\b/.test(q) && /\b(brainrot|brainrots|unit|units|earner|earners)\b/.test(q);
   if (asksRanking) {
     const count = getRequestedCount(q);
     const rankingFields = { income: fields.income, rarity: fields.rarity, exists: fields.exists };
