@@ -35,9 +35,12 @@ export function getSammyPersonalFactsAnswer(question: string): string | null {
 
   const brainrotMatch = /\b(?:my\s+)?fav(?:ou?rite)?\s+(?:brainrot|brain\s?rot)\b|\b(?:brainrot|brain\s?rot)\s+(?:is\s+)?my fav(?:ou?rite)?\b/.exec(q);
 
-  const mutationMatch = /\b(?:my\s+)?fav(?:ou?rite)?\s+mutation\b|\bmutation\s+(?:is\s+)?my fav(?:ou?rite)?\b/.exec(q);
- const ageMatch = /\b(?:sammy'?s\s+age|my\s+age|age|how old is sammy|how old am i)\b/.exec(q);
+const mutationMatch = /\b(?:my\s+)?fav(?:ou?rite)?\s+mutations?\b|\bmutations?\s+(?:is|are)?\s*my fav(?:ou?rite)?\b/.exec(q);
+
+const ageMatch = /\b(?:sammy'?s\s+age|my\s+age|age|how old is sammy|how old am i)\b/.exec(q);
+
 const birthdayMatch = /\b(?:sammy'?s\s+(?:birthday|birth date|date of birth)|my\s+(?:birthday|birth date|date of birth)|birthday|birth date|date of birth|when was sammy born)\b/.exec(q);
+
 const devMatch = /\b(?:sammy'?s\s+(?:best|favorite|favourite)\s+dev(?:eloper)?|my\s+(?:best|favorite|favourite)\s+dev(?:eloper)?|(?:best|favorite|favourite)\s+dev(?:eloper)?|who\s+is\s+sammy'?s\s+best\s+dev(?:eloper)?)\b/.exec(q);
   if (nameMatch) facts.push({ key: "name", position: nameMatch.index, answer: SAMMY_FACTS.name });
   if (catMatch) facts.push({ key: "cat", position: catMatch.index, answer: "Nova" });
