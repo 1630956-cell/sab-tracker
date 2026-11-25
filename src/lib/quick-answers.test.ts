@@ -23,9 +23,12 @@ describe("quickAnswer", () => {
   it("next update is Saturday 3 PM ET", () => {
     expect(quickAnswer("When is the next update?")).toBe("Every Saturday at 3 PM ET");
   });
-  it("Hacker mutation is 15x and the best mutation", () => {
-    expect(quickAnswer("What is the Hacker mutation multiplier?")).toBe("15× (reported)");
-    expect(quickAnswer("What's the best mutation?")).toBe("Hacker (15×, reported)");
+  it("returns the stored favorite mutation without extra text", () => {
+    expect(quickAnswer("What's Sammy's favorite mutation?")).toBe("Ying Yang");
+  });
+  it("keeps Hacker mutation multiplier separate from Hacker Elephant existence", () => {
+    expect(quickAnswer("What's the Hacker mutation multiplier?")).toBe("15x");
+    expect(quickAnswer("How many Hacker Elephants are confirmed?")).toBe("1");
   });
   it("uses mutation-specific existence separately from base existence", () => {
     expect(quickAnswer("How many Meowl exist in Gold?")).toContain("Meowl Gold existence: 323.");
