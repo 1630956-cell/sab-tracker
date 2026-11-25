@@ -38,7 +38,7 @@ export function getSammyPersonalFactsAnswer(question: string): string | null {
     facts.push({ key: "mutation", position: mutationMatch.index, answer: SAMMY_FACTS.favoriteMutation });
   }
 
-  if (facts.length < 2) return null;
+  if (facts.length === 0) return null;
   facts.sort((a, b) => a.position - b.position);
   return [...new Set(facts.map((fact) => fact.answer))].join(", ");
 }
@@ -219,14 +219,14 @@ function bestObtainableOGAnswer(): string {
 
 const RULES: Rule[] = [
   { test: /\b(best|strongest|highest|top)\b.*\b(obtainable|obtain|available)\b.*\bog\b|\bog\b.*\b(best|strongest|highest|top)\b.*\b(obtainable|obtain|available)\b/i, answer: bestObtainableOGAnswer },
-  { test: /\b(favorite|favourite|fav)\s+(brainrot|unit)\b|\b(brainrot|unit)\b.*\b(favorite|favourite|fav)\b/, answer: () => "Meowl" },
-  { test: /\b(favorite|favourite|fav)\s+mutation\b|\bmutation\b.*\b(favorite|favourite|fav)\b/, answer: () => "Ying Yang" },
+  { test: /\b(?:what is|what's|tell me)\b.*\b(?:my )?(?:favorite|favourite|fav)\s+(?:brainrot|unit)\b|\bmy (?:favorite|favourite|fav)\s+(?:brainrot|unit)\b/i, answer: () => "Meowl" },
+  { test: /\b(?:what is|what's|tell me)\b.*\b(?:my )?(?:favorite|favourite|fav)\s+mutation\b|\bmy (?:favorite|favourite|fav)\s+mutation\b/i, answer: () => "Ying Yang" },
   { test: /\bcannelloni\b|hydra dragon/, answer: () => "Hydra Dragon Cannelloni — Secret — $300M/s" },
-  { test: /\b(cat|cats|pet)\b/, answer: () => "Nova" },
-  { test: /\b(username|handle)\b|\bwho is sammy\b/, answer: () => "Sammy" },
+  { test: /\b(?:what is|what's|name|who is|which is)\b.*\b(?:cat|cats|pet)\b|\b(?:cat|cats|pet)\b.*\b(?:name|called|is it)\b/i, answer: () => "Nova" },
+  { test: /\b(?:what is|what's|tell me)\b.*\b(?:my )?(?:username|handle)\b|\bwho is sammy\b/i, answer: () => "Sammy" },
   { test: /\bstudio\b|\bcompany\b/, answer: () => "Do Big Studios" },
   { test: /\bgroup\b/, answer: () => GAME.groupName },
-  { test: /\b(owner|creator|founder|developer)\b/, answer: () => "Sammy" },
+  { test: /\b(?:who is|who's|name|who created|who owns)\b.*\b(?:owner|creator|founder|developer)\b|\b(?:owner|creator|founder|developer)\b.*\b(?:who|name)\b/i, answer: () => "Sammy" },
   { test: /\brelease date\b|\bwhen was .* released\b|\bwhen did .* release\b/, answer: () => GAME.released },
   { test: /\btaco tuesday\b|\badmin abuse\b/, answer: () => "Saturdays after the update, and Tuesdays at 6 PM ET (Taco Tuesday)" },
   { test: /\b(newest|latest|last|recent|current) update\b|\bupdate (is )?(out|now)\b/, answer: () => `Update ${latest.n}: ${latest.title} (${latest.date})` },
