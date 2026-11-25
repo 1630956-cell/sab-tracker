@@ -159,7 +159,7 @@ function answerFromCatalog(question: string): string | null {
       .sort((a, b) => a[6]! - b[6]!)[0];
 
     return rarest
-      ? `${rarest[0]} — ${rarest[1]} — ${rarest[6]!.toLocaleString()} exist.`
+      ? rarest[0]`
       : "No confirmed existence counts found.";
   }
   const asksRanking = /\b(top|richest|highest earning|highest income|most profitable|best earning)\b/.test(q) && /\b(brainrot|brainrots|unit|units|earner|earners)\b/.test(q);
