@@ -49,7 +49,8 @@ export function getSammyPersonalFactsAnswer(question: string): string | null {
 function requestedFields(q: string) {
   return {
     income: /\b(income|earn|earns|earning|per second|money|makes|make|making|\/s)\b/.test(q),
-    rarity: /\b(rarity|rarities|rare|tier)\b/.test(q),
+    rarity: /\b(rarity|rarities|rare|tier|what rarity|which rarity|what tier|which tier)\b/.test(q)
+      || /\b(?:is|are)\b.*\b(?:an? )?(?:og|secret|brainrot)\b/.test(q),
     exists: /\b(exist|exists|existing|how many|count|quantity|stock|owned)\b/.test(q),
   };
 }
