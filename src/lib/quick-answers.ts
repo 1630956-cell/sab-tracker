@@ -292,7 +292,7 @@ const RULES: Rule[] = [
   },
   {
     test: /\b(favorite|favourite|fav)\s+mutation\b|\bmutation\b.*\b(favorite|favourite|fav)\b/,
-    answer: () => "Unknown",
+    answer: () => "Ying Yang",
   },
   { test: /\bcannelloni\b|hydra dragon/, answer: () => "Hydra Dragon Cannelloni — Secret — $300M/s" },
   { test: /\b(cat|cats|pet)\b/, answer: () => "Nova" },
@@ -325,7 +325,14 @@ const RULES: Rule[] = [
     test: /\b(platforms?|console|xbox|playstation|ps5|mobile|phone)\b/,
     answer: () => "PC, Mac, mobile, PlayStation and Xbox",
   },
-  { test: /\bhacker\b.*\bmutation\b|\bmutation\b.*\bhacker\b/, answer: () => "15× (reported)" },
+  {
+    test: /\bhacker elephant\b.*\b(exist|exists|confirmed|count|how many)\b|\b(exist|exists|confirmed|count|how many)\b.*\bhacker elephant\b/,
+    answer: () => "1",
+  },
+  {
+    test: /\bhacker\b.*\bmutation\b|\bmutation\b.*\bhacker\b/,
+    answer: () => "15x",
+  },
   { test: /\b(best|highest|strongest|top) mutation\b/, answer: () => "Hacker (15×, reported)" },
   { test: /\b(best|highest|rarest|top) rarity\b/, answer: () => "OG" },
 ];
@@ -380,6 +387,12 @@ Never invent missing values.
 export function quickAnswer(question: string): string | null {
   const q = normalize(question);
   if (!q || NEEDS_WEB.test(q)) return null;
+
+  // Handle this count before catalog lookup so catalog data cannot add a second, conflicting count.
+  if (/\bhacker elephant\b.*\b(exist|exists|confirmed|count|how many)\b|\b(exist|exists|confirmed|count|how many)\b.*\bhacker elephant\b/.test(q)) {
+    return "1";
+  }
+
   const answers: string[] = [];
   const catalogAnswer = answerFromCatalog(question);
   if (catalogAnswer) answers.push(catalogAnswer);
