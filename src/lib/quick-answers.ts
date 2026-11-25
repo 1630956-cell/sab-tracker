@@ -286,7 +286,10 @@ export function quickAnswer(question: string): string | null {
     if (!rule.test.test(q)) continue;
     if (asksBestOG && rule.answer === bestObtainableOGAnswer) continue;
     const answer = rule.answer();
-if (personalAnswer && personalAnswer.split(", ").includes(answer)) continue;
+if (personalAnswer && (
+  personalAnswer.split(", ").includes(answer) ||
+  /^your name:\s*sammy\.?$/i.test(answer.trim())
+)) continue;
 if (!answers.includes(answer)) answers.push(answer);
   }
   const bro = DB.bros.find((b) => q.includes(normalize(b.name)));
