@@ -38,7 +38,7 @@ export function getSammyPersonalFactsAnswer(question: string): string | null {
     facts.push({ key: "mutation", position: mutationMatch.index, answer: SAMMY_FACTS.favoriteMutation });
   }
 
-  if (facts.length === 0) return null;
+  if (facts.length < 2) return null;
   facts.sort((a, b) => a.position - b.position);
   return [...new Set(facts.map((fact) => fact.answer))].join(", ");
 }
