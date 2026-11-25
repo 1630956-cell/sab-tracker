@@ -7,7 +7,7 @@ import { GAME, SAMMY, UPDATES, nextET } from "@/lib/game-data";
 import { askGemini, getLiveStats } from "@/lib/game.functions";
 import { DatabasePanel } from "@/components/DatabasePanel";
 import { DB } from "@/lib/brainrot-db";
-import { quickAnswer } from "@/lib/quick-answers";
+import { quickAnswer, shouldDelegateToAi } from "@/lib/quick-answers";
 import { guard, RepeatTracker } from "@/lib/abuse-guard";
 import { CodexPanel } from "@/components/CodexPanel";
 import { BasePanel } from "@/components/BasePanel";
@@ -56,7 +56,7 @@ function ThemeToggle() {
     try { localStorage.setItem("theme", next ? "light" : "dark"); } catch { /* ignore */ }
   };
   return (
-    <button onClick={flip} aria-label={light ? "Switch to black theme" : "Switch to white theme"} className="flex items-center gap-1 rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs font-medium transition hover:shadow-glow">
+    <button onClick={flip} aria-label={light ? "Switch to black theme" : "Switch to white theme"} className="flex items-center gap-1 rounded-lg border border-border bg-secondary px-2.5 py-1.5 text-xs">
       <span className={light ? "opacity-40" : ""}>🌙</span><span className="text-muted-foreground">/</span><span className={light ? "" : "opacity-40"}>☀️</span>
     </button>
   );
@@ -99,7 +99,7 @@ function Home() {
         </div>
         <div className="flex items-center gap-2">
         <ThemeToggle />
-        <a href={GAME.url} target="_blank" rel="noreferrer" className="rounded-lg bg-gradient-brand px-3.5 py-1.5 text-sm font-semibold text-primary-foreground shadow-glow transition hover:brightness-110">Play game ↗</a>
+        <a href={GAME.url} target="_blank" rel="noreferrer" className="rounded-lg bg-gradient-brand px-3.5 py-1.5 text-sm font-semibold text-primary-foreground shadow-glow transition hover:brightness-110">Play</a>
         </div>
       </header>
       </div>
@@ -113,7 +113,7 @@ function Home() {
           <div className="mt-2 font-mono text-5xl font-bold tabular-nums text-gradient sm:text-7xl">{fmt(data.playing)}</div>
           {data.error && <p className="mt-2 text-sm text-destructive">{data.error}</p>}
           <div className="mt-6 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
-            {[["Total visits", fmt(data.visits)], ["Favorites", fmt(data.favorites)], ["Last game update", data.updated ? new Date(data.updated).toLocaleString() : "—"]].map(([k, v]) => (
+            {[ ["Total visits", fmt(data.visits)], ["Favorites", fmt(data.favorites)], ["Last game update", data.updated ? new Date(data.updated).toLocaleString() : "—"] ].map(([k, v]) => (
               <div key={k} className="rounded-xl bg-secondary px-3 py-2.5"><div className="text-xs text-muted-foreground">{k}</div><div className="mt-0.5 font-semibold">{v}</div></div>
             ))}
           </div>
@@ -162,7 +162,7 @@ function Home() {
 
         {tab === "updates" && (
           <section className="space-y-3">
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search updates, Brainrots, events…" className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none transition focus:border-primary focus:shadow-glow" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search updates, Brainrots, events…" className="w-full rounded-xl border border-input bg-card px-4 py-3 text-sm outline-none focus:border-primary" />
             {list.map((u) => (
               <article key={u.n} className="surface animate-rise p-5">
                 <div className="flex items-baseline justify-between gap-3">
@@ -219,17 +219,19 @@ function AskPanel() {
   async function run(p = prompt) {
     const refused = guard(p, clientTracker);
     if (refused) { setOut(refused); return; }
-    const quick = quickAnswer(p);
-    if (quick) { setOut(quick); return; }
+    if (!shouldDelegateToAi(p)) {
+      const quick = quickAnswer(p);
+      if (quick) { setOut(quick); return; }
+    }
     setLoading(true); setOut(null);
     const r = await ask({ data: { prompt: p } });
     setOut(r.error ?? r.text); setLoading(false);
   }
   return (
     <section className="surface space-y-3 p-5">
-      <div className="flex flex-wrap gap-2">{presets.map((p) => <button key={p} onClick={() => { setPrompt(p); run(p); }} className="rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground transition hover:bg-accent">{p}</button>)}</div>
-      <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} className="w-full rounded-xl border border-input bg-background p-3 text-sm outline-none transition focus:border-primary focus:shadow-glow" />
-      <button disabled={loading} onClick={() => run()} className="rounded-lg bg-gradient-brand px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:brightness-110 disabled:opacity-50">{loading ? "Searching the web…" : "Ask"}</button>
+      <div className="flex flex-wrap gap-2">{presets.map((p) => <button key={p} onClick={() => { setPrompt(p); run(p); }} className="rounded-full bg-secondary px-3 py-1 text-xs text-secondary-foreground hover:bg-accent">{p}</button>)}</div>
+      <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} className="w-full rounded-xl border border-input bg-background p-3 text-sm outline-none transition focus:border-primary" placeholder="Ask anything about Steal a Brainrot…" />
+      <button disabled={loading} onClick={() => run()} className="rounded-lg bg-gradient-brand px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:brightness-110 disabled:opacity-50">{loading ? "Thinking…" : "Ask AI"}</button>
       {out && <div className="animate-rise whitespace-pre-wrap rounded-xl border border-primary/40 bg-background p-4 text-base font-medium">{out}</div>}
     </section>
   );
@@ -248,7 +250,7 @@ function IncomingPanel() {
     <section className="surface p-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-bold">Incoming updates</h2>
-        <button disabled={loading} onClick={check} className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground transition hover:bg-accent disabled:opacity-50">{loading ? "Checking the web…" : "Check latest leaks (AI)"}</button>
+        <button disabled={loading} onClick={check} className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground transition hover:bg-accent disabled:opacity-50">{loading ? "Checking…" : "Check for live news"}</button>
       </div>
       <ul className="mt-3 divide-y divide-border">
         {DB.upcoming.map((u) => (
