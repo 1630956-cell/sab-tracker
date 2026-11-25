@@ -150,7 +150,8 @@ function answerFromCatalog(question: string): string | null {
   const q = normalize(question);
   if (!q) return null;
   const fields = requestedFields(q);
-    const asksRarest = /\b(rarest|fewest|least common)\b/.test(q)
+
+  const asksRarest = /\b(rarest|fewest|least common)\b/.test(q)
     && /\b(brainrots?|units?)\b/.test(q);
 
   if (asksRarest) {
@@ -158,10 +159,20 @@ function answerFromCatalog(question: string): string | null {
       .filter((unit) => unit[6] !== null && unit[6] > 0)
       .sort((a, b) => a[6]! - b[6]!)[0];
 
-    return rarest
-      ? rarest[0]`
-      : "No confirmed existence counts found.";
+    if (!rarest) return "No confirmed existence counts found.";
+
+    const mutation = findRequestedMutation(q);
+
+    if (mutation) {
+      const count = existsForWithAdditional(rarest[0], mutation);
+      return `${rarest[0]} — ${count === null ? "No confirmed count" : `${count.toLocaleString()} ${mutation} exist.`}`;
+    }
+
+    return rarest[0];
   }
+
+  const asksRanking = /\b(top|richest|highest earning|highest income|most profitable|best earning)\b/.test(q) && /\b(brainrot|brainrots|unit|units|earner|earners)\b/.test(q);
+  
   const asksRanking = /\b(top|richest|highest earning|highest income|most profitable|best earning)\b/.test(q) && /\b(brainrot|brainrots|unit|units|earner|earners)\b/.test(q);
   if (asksRanking) {
     const count = getRequestedCount(q);
