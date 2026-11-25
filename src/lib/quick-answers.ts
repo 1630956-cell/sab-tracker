@@ -14,12 +14,15 @@ function normalize(value: string): string {
   return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
 }
 
-const NEEDS_WEB = /\b(leaks?|leaked|rumou?rs?|news|today|tonight|right now|currently|live|real name|age|player count|how many players)\b/;
+const NEEDS_WEB = /\b(leaks?|leaked|rumou?rs?|news|today|tonight|right now|currently|live|real name|player count|how many players)\b/;
 
 const SAMMY_FACTS = {
   name: "Sammy",
   favoriteBrainrot: "Meowl",
   favoriteMutation: "Ying Yang",
+  bestDev: "Hasted",
+  age: 24,
+  birthday: "February 2002",
 } as const;
 
 export function getSammyPersonalFactsAnswer(question: string): string | null {
@@ -33,11 +36,17 @@ export function getSammyPersonalFactsAnswer(question: string): string | null {
   const brainrotMatch = /\b(?:my\s+)?fav(?:ou?rite)?\s+(?:brainrot|brain\s?rot)\b|\b(?:brainrot|brain\s?rot)\s+(?:is\s+)?my fav(?:ou?rite)?\b/.exec(q);
 
   const mutationMatch = /\b(?:my\s+)?fav(?:ou?rite)?\s+mutation\b|\bmutation\s+(?:is\s+)?my fav(?:ou?rite)?\b/.exec(q);
+  const ageMatch = /\b(?:sammy'?s|my)\s+age\b|\bhow old is sammy\b|\bhow old am i\b/.exec(q);
+const birthdayMatch = /\b(?:sammy'?s|my)\s+(?:birthday|birth date|date of birth)\b|\bwhen was sammy born\b/.exec(q);
+  const devMatch = /\b(?:sammy'?s|my)\s+(?:best|favorite|favourite)\s+dev(?:eloper)?\b|\bwho\s+is\s+sammy'?s\s+best\s+dev(?:eloper)?\b/.exec(q);
 
   if (nameMatch) facts.push({ key: "name", position: nameMatch.index, answer: SAMMY_FACTS.name });
   if (catMatch) facts.push({ key: "cat", position: catMatch.index, answer: "Nova" });
   if (brainrotMatch) facts.push({ key: "brainrot", position: brainrotMatch.index, answer: SAMMY_FACTS.favoriteBrainrot });
   if (mutationMatch) facts.push({ key: "mutation", position: mutationMatch.index, answer: SAMMY_FACTS.favoriteMutation });
+  if (devMatch) facts.push({ key: "dev", position: devMatch.index, answer: SAMMY_FACTS.bestDev });
+if (ageMatch) facts.push({ key: "age", position: ageMatch.index, answer: String(SAMMY_FACTS.age) });
+if (birthdayMatch) facts.push({ key: "birthday", position: birthdayMatch.index, answer: SAMMY_FACTS.birthday });
 
   facts.sort((a, b) => a.position - b.position);
 
