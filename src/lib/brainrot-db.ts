@@ -9,7 +9,7 @@ export const DB = {
     { when: "Tue Nov 24, 2026 · 6 PM ET", event: "Taco Tuesday Admin Abuse", status: "expected" },
     { when: "Sat Nov 28, 2026 · 3 PM ET", event: "Weekly Saturday update + Admin Abuse (contents not announced)", status: "expected" },
     { when: "Late Nov 2026", event: "Thanksgiving-themed update — no official announcement", status: "unconfirmed" },
-    { when: "Dec 2026", event: "Christmas / winter event (last year: Santa Fuse, North Pole, Gingerbread Town) — not announced yet", status: "unconfirmed" },
+    { when: "Dec 2026", event: "Christmas / winter event (Ice Dragon reportedly planned for the 2026 Christmas event; event details not announced yet)", status: "unconfirmed" },
   ] as { when: string; event: string; status: Status }[],
 
   sammy: [
