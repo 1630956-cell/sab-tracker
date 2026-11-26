@@ -22,6 +22,15 @@ export const UPDATES: Update[] = [
   { n: 66, date: "2026-09-12", title: "OG Craft Machine Returns", items: ["Replaces RNG Machine", "Los Dragons — $425M/s", "Hippo Jacuzzo, Koala Parabala (Brainrot God)"] },
   { n: 65, date: "2026-09-05", title: "Money Money Puggy Ritual", items: ["Fuse two Money Money Puggies into Los Puggies — $40M/s", "1 of 1 base skin"] },
   { n: 14, date: "2025-08-30", title: "OG Rarity", items: ["Added OG rarity", "Strawberry Elephant"] },
+    {
+    n: 0,
+    date: "2025-08-23",
+    title: "Admin Abuse War",
+    items: [
+      "Jandel won the Admin Abuse War against Sammy.",
+      "Grow a Garden reached approximately 23.3 million concurrent players, while Steal a Brainrot reached approximately 20.1 million."
+    ]
+  },
   { n: 10, date: "2025-08-01", title: "Fuse Machine", items: ["Added Fuse Machine"] },
   { n: 5, date: "2025-06-28", title: "Traits", items: ["Added Traits"] },
   { n: 1, date: "2025-05-31", title: "Mutations", items: ["Gold and Diamond mutations", "Secret rarity", "Rebirths 6 and 7"] },
