@@ -74,9 +74,11 @@ if (!shouldDelegateToAi(data.prompt)) {
   if (quick) return { text: quick, error: null };
 }
 
+const cached = getCachedAnswer(data.prompt);
+if (cached) return { text: cached, error: null };
+
 const refused = guard(data.prompt, tracker, who);
 if (refused) return { text: refused, error: null };
-
     const key = process.env["LOVABLE_API_KEY"];
     if (!key) return { text: null, error: "AI is not set up for this app yet." };
 
