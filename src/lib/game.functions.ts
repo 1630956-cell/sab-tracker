@@ -5,6 +5,35 @@ import { quickAnswer, shouldDelegateToAi, getQuestionDataContext } from "./quick
 import { guard, RepeatTracker } from "./abuse-guard";
 
 const tracker = new RepeatTracker();
+const answerCache = new Map<string, { text: string; expiresAt: number }>();
+
+function getCachedAnswer(prompt: string): string | null {
+  const key = prompt.toLowerCase().trim().replace(/\s+/g, " ");
+  const entry = answerCache.get(key);
+
+  if (!entry) return null;
+
+  if (Date.now() > entry.expiresAt) {
+    answerCache.delete(key);
+    return null;
+  }
+
+  return entry.text;
+}
+
+function saveCachedAnswer(prompt: string, text: string): void {
+  const key = prompt.toLowerCase().trim().replace(/\s+/g, " ");
+
+  if (answerCache.size >= 500) {
+    const oldest = answerCache.keys().next().value;
+    if (oldest) answerCache.delete(oldest);
+  }
+
+  answerCache.set(key, {
+    text,
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+  });
+}
 
 function cleanAiAnswer(text: string): string {
   return text
