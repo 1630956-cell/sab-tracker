@@ -259,7 +259,47 @@ function bestObtainableOGAnswer(): string {
   if (!best) return "Strawberry Elephant ($750M/s) with 1,269 exist (Red Carpet spawn).";
   return `${best[0]} (${best[2]}) with ${best[6] ? best[6].toLocaleString() : "unpublished"} exist (${best[4] || "Red Carpet spawn"}).`;
 }
+function answerFromUpdates(question: string): string | null {
+  const ignored = new Set([
+    "who", "what", "when", "where", "why", "how",
+    "did", "does", "is", "was", "were", "the", "a",
+    "an", "and", "or", "of", "in", "on", "for",
+    "to", "me", "tell", "about", "update", "updates",
+    "event", "events"
+  ]);
 
+  const terms = [...new Set(
+    normalize(question)
+      .split(" ")
+      .filter((word) => word.length > 2 && !ignored.has(word))
+  )];
+
+  if (terms.length < 2) return null;
+
+  const matches = UPDATES.map((update) => {
+    const searchable = normalize(
+      `${update.title} ${update.items.join(" ")}`
+    );
+
+    const matchedTerms = terms.filter((term) =>
+      searchable.includes(term)
+    );
+
+    return { update, matchedTerms };
+  })
+    .filter((match) => match.matchedTerms.length >= 2)
+    .sort((a, b) => b.matchedTerms.length - a.matchedTerms.length);
+
+  const best = matches[0];
+  if (!best) return null;
+
+  const relevantItems = best.update.items.filter((item) => {
+    const text = normalize(item);
+    return best.matchedTerms.some((term) => text.includes(term));
+  });
+
+  return `Update ${best.update.n}: ${best.update.title} (${best.update.date})\n${relevantItems.join("\n")}`;
+}
 const RULES: Rule[] = [
   { test: /\b(best|strongest|highest|top)\b.*\b(obtainable|obtain|available)\b.*\bog\b|\bog\b.*\b(best|strongest|highest|top)\b.*\b(obtainable|obtain|available)\b/i, answer: bestObtainableOGAnswer },
   { test: /\b(?:what is|what's|tell me)\b.*\b(?:my )?(?:favorite|favourite|fav)\s+(?:brainrot|unit)\b|\bmy (?:favorite|favourite|fav)\s+(?:brainrot|unit)\b/i, answer: () => "Meowl" },
