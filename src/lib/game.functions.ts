@@ -135,5 +135,6 @@ ${getQuestionDataContext(data.prompt)}`,
     const json = (await r.json()) as { choices?: { message?: { content?: string } }[] };
     const rawText = json.choices?.[0]?.message?.content ?? "";
     const final = cleanAiAnswer(rawText);
-    return { text: final, error: null };
+saveCachedAnswer(data.prompt, final);
+return { text: final, error: null };
   });
