@@ -359,8 +359,11 @@ export function quickAnswer(question: string): string | null {
   if (/\bhacker elephant\b.*\b(exist|exists|confirmed|count|how many)\b|\b(exist|exists|confirmed|count|how many)\b.*\bhacker elephant\b/.test(q)) return "1";
   const answers: string[] = [];
   if (personalAnswer) answers.push(personalAnswer);
-  const catalogAnswer = answerFromCatalog(question);
-  if (catalogAnswer) answers.push(catalogAnswer);
+ const catalogAnswer = answerFromCatalog(question);
+if (catalogAnswer) answers.push(catalogAnswer);
+
+const updatesAnswer = answerFromUpdates(question);
+if (updatesAnswer) answers.push(updatesAnswer);
   const asksBestOG = /\b(best|strongest|highest|top)\b/.test(q) && /\bog\b/.test(q) && /\b(obtainable|obtain|available)\b/.test(q);
   for (const rule of RULES) {
     if (!rule.test.test(q)) continue;
