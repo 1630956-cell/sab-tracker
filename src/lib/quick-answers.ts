@@ -11,7 +11,15 @@ const latest = UPDATES[0]!;
 const codes = DB.codes.filter((c) => c.status === "active").map((c) => c.code).join(", ");
 
 function normalize(value: string): string {
-  return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ");
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\bmutaion\b/g, "mutation")
+    .replace(/\bmutaton\b/g, "mutation")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 const NEEDS_WEB = /\b(leaks?|leaked|rumou?rs?|news|today|tonight|right now|currently|live|real name|player count|how many players)\b/;
