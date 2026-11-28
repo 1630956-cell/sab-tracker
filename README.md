@@ -76,3 +76,7 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+
+## Sammy V9 repair notes
+See `REPAIR-NOTES-V9.md` for the V9 question matching, freshness metadata, correction suggestions, conversation context, trusted-proxy configuration, and Supabase migration instructions.

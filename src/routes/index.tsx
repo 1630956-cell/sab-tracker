@@ -4,17 +4,14 @@ import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useMemo, useState } from "react";
 import { BRAND, brandMeta } from "@/lib/brand";
 import { GAME, SAMMY, UPDATES, nextET } from "@/lib/game-data";
-import { askGemini, getLiveStats } from "@/lib/game.functions";
+import { askGemini, getLiveStats, submitAnswerCorrection } from "@/lib/game.functions";
 import { DatabasePanel } from "@/components/DatabasePanel";
 import { DB } from "@/lib/brainrot-db";
-import { quickAnswer, shouldDelegateToAi } from "@/lib/quick-answers";
-import { guard, RepeatTracker } from "@/lib/abuse-guard";
 import { CodexPanel } from "@/components/CodexPanel";
 import { BasePanel } from "@/components/BasePanel";
 import { TradePanel } from "@/components/TradePanel";
 import { FeedbackPanel } from "@/components/FeedbackPanel";
 
-const clientTracker = new RepeatTracker();
 
 const statsQuery = queryOptions({ queryKey: ["live"], queryFn: () => getLiveStats(), staleTime: 25_000, refetchInterval: 30_000 });
 
@@ -212,20 +209,36 @@ function Home() {
 
 function AskPanel() {
   const ask = useServerFn(askGemini);
+  const submitCorrection = useServerFn(submitAnswerCorrection);
   const [prompt, setPrompt] = useState("What is the newest Steal a Brainrot update and what did it add?");
   const [out, setOut] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [showCorrection, setShowCorrection] = useState(false);
+  const [correctedAnswer, setCorrectedAnswer] = useState("");
+  const [correctionStatus, setCorrectionStatus] = useState<string | null>(null);
+  const [savingCorrection, setSavingCorrection] = useState(false);
   const presets = ["What's the newest update?", "What events are coming next?", "Latest news about SpyderSammy", "When is the next update and what's leaked?", "Any active codes?"];
   async function run(p = prompt) {
-    const refused = guard(p, clientTracker);
-    if (refused) { setOut(refused); return; }
-    if (!shouldDelegateToAi(p)) {
-      const quick = quickAnswer(p);
-      if (quick) { setOut(quick); return; }
+    const question = p.trim();
+    if (!question) { setOut("Please enter a question first."); return; }
+    setLoading(true); setOut(null); setCorrectionStatus(null); setShowCorrection(false); setCorrectedAnswer("");
+    try {
+      const r = await ask({ data: { prompt: question, history } });
+      const answer = r.error ?? r.text ?? "Sammy couldn't answer that. Please try again.";
+      setOut(answer);
+     setHistory((old) =>
+  [
+    ...old,
+    { role: "user" as const, content: question },
+    { role: "assistant" as const, content: answer },
+  ].slice(-6)
+);
+    } catch {
+      setOut("Couldn't reach Sammy right now. Check your connection and try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(true); setOut(null);
-    const r = await ask({ data: { prompt: p } });
-    setOut(r.error ?? r.text); setLoading(false);
   }
   return (
     <section className="surface space-y-3 p-5">
@@ -233,6 +246,23 @@ function AskPanel() {
       <textarea value={prompt} onChange={(e) => setPrompt(e.target.value)} rows={3} className="w-full rounded-xl border border-input bg-background p-3 text-sm outline-none transition focus:border-primary" placeholder="Ask anything about Steal a Brainrot…" />
       <button disabled={loading} onClick={() => run()} className="rounded-lg bg-gradient-brand px-5 py-2 text-sm font-semibold text-primary-foreground shadow-glow transition hover:brightness-110 disabled:opacity-50">{loading ? "Thinking…" : "Ask AI"}</button>
       {out && <div className="animate-rise whitespace-pre-wrap rounded-xl border border-primary/40 bg-background p-4 text-base font-medium">{out}</div>}
+      {out && <div className="space-y-2">
+        <button type="button" onClick={() => { setShowCorrection((value) => !value); setCorrectionStatus(null); }} className="text-xs text-muted-foreground underline">Suggest a correction</button>
+        {showCorrection && <div className="space-y-2 rounded-lg border border-border p-3">
+          <textarea value={correctedAnswer} onChange={(e) => setCorrectedAnswer(e.target.value)} rows={2} maxLength={2000} className="w-full rounded-lg border border-input bg-background p-2 text-sm" placeholder="Enter the verified correct answer…" />
+          <button type="button" disabled={savingCorrection || correctedAnswer.trim().length < 2} onClick={async () => {
+            setSavingCorrection(true); setCorrectionStatus(null);
+            try {
+              const result = await submitCorrection({ data: { question: prompt, suggestedAnswer: correctedAnswer } });
+              setCorrectionStatus(result.ok ? "Correction submitted for review. It won't become a verified answer until approved." : result.error);
+              if (result.ok) { setCorrectedAnswer(""); setShowCorrection(false); }
+            } catch { setCorrectionStatus("Couldn't submit the correction. Please try again."); }
+            finally { setSavingCorrection(false); }
+          }} className="rounded-lg bg-secondary px-3 py-1.5 text-xs font-medium disabled:opacity-50">{savingCorrection ? "Submitting…" : "Submit correction"}</button>
+        </div>}
+        {correctionStatus && <p className="text-xs text-muted-foreground">{correctionStatus}</p>}
+      </div>}
+      {history.length > 0 && <button type="button" onClick={() => { setHistory([]); setOut(null); setCorrectionStatus(null); }} className="text-xs text-muted-foreground underline">Clear conversation</button>}
     </section>
   );
 }
@@ -243,8 +273,14 @@ function IncomingPanel() {
   const [loading, setLoading] = useState(false);
   async function check() {
     setLoading(true); setOut(null);
-    const r = await ask({ data: { prompt: "What is the next upcoming Steal a Brainrot update or event, and what is leaked or announced for it?" } });
-    setOut(r.error ?? r.text); setLoading(false);
+    try {
+      const r = await ask({ data: { prompt: "What is the next upcoming Steal a Brainrot update or event, and what is leaked or announced for it?" } });
+      setOut(r.error ?? r.text ?? "No update information came back. Please try again.");
+    } catch {
+      setOut("Couldn't check live news right now. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
   return (
     <section className="surface p-6">

@@ -3,6 +3,7 @@ import { GAME, UPDATES } from "./game-data";
 import { UNITS } from "./codex-data";
 import { existsForWithAdditional } from "./mutation-exists-additional";
 import { MUTATIONS } from "./mutations";
+import { getSammyPersonalFactsAnswer } from "./sammy-personal-facts";
 
 type Rule = { test: RegExp; answer: () => string };
 type Unit = (typeof UNITS)[number];
@@ -17,6 +18,14 @@ function normalize(value: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/\bmutaion\b/g, "mutation")
     .replace(/\bmutaton\b/g, "mutation")
+    .replace(/\bbrainrot(s)?\b/g, "brainrot$1")
+    .replace(/\bmutatoin\b/g, "mutation")
+    .replace(/\bmutaiton\b/g, "mutation")
+    .replace(/\bmutatons\b/g, "mutations")
+    .replace(/\bmeowll\b/g, "meowl")
+    .replace(/\bmeolw\b/g, "meowl")
+    .replace(/\bdiamnod\b/g, "diamond")
+    .replace(/\bgoldd\b/g, "gold")
     .replace(/[^a-z0-9]+/g, " ")
     .trim()
     .replace(/\s+/g, " ");
@@ -24,53 +33,14 @@ function normalize(value: string): string {
 
 const NEEDS_WEB = /\b(leaks?|leaked|rumou?rs?|news|today|tonight|right now|currently|live|real name|player count|how many players)\b/;
 
-const SAMMY_FACTS = {
-  name: "Sammy",
-  favoriteBrainrot: "Meowl",
-  favoriteMutation: "Ying Yang",
-  bestDev: "Hasted",
-  age: 24,
-  birthday: "February 2002",
-} as const;
-
-export function getSammyPersonalFactsAnswer(question: string): string | null {
-  const q = question.toLowerCase();
-  const facts: { key: string; position: number; answer: string }[] = [];
-
-  const nameMatch = /\b(my name|what(?:'s| is) my name|who am i|my username|what(?:'s| is) my username|my handle|what(?:'s| is) my handle)\b/.exec(q);
-
-  const catMatch = /\b(?:my\s+)?(?:cat|cats|pet)(?:'s)?\s+(?:name|called)\b|\b(?:what(?:'s| is)|tell me)\b.*\b(?:my\s+)?(?:cat|cats|pet)\b/i.exec(q);
-
-  const brainrotMatch = /\b(?:my\s+)?fav(?:ou?rite)?\s+(?:brainrot|brain\s?rot)\b|\b(?:brainrot|brain\s?rot)\s+(?:is\s+)?my fav(?:ou?rite)?\b/.exec(q);
-
-const mutationMatch = /\b(?:my\s+)?fav(?:ou?rite)?\s+mutations?\b|\bmutations?\s+(?:is|are)?\s*my fav(?:ou?rite)?\b/.exec(q);
-
-const ageMatch = /\b(?:sammy'?s\s+age|my\s+age|age|how old is sammy|how old am i)\b/.exec(q);
-
-const birthdayMatch = /\b(?:sammy'?s\s+(?:birthday|birth date|date of birth)|my\s+(?:birthday|birth date|date of birth)|birthday|birth date|date of birth|when was sammy born)\b/.exec(q);
-
-const devMatch = /\b(?:sammy'?s\s+(?:best|favorite|favourite)\s+dev(?:eloper)?|my\s+(?:best|favorite|favourite)\s+dev(?:eloper)?|(?:best|favorite|favourite)\s+dev(?:eloper)?|who\s+is\s+sammy'?s\s+best\s+dev(?:eloper)?)\b/.exec(q);
-  if (nameMatch) facts.push({ key: "name", position: nameMatch.index, answer: SAMMY_FACTS.name });
-  if (catMatch) facts.push({ key: "cat", position: catMatch.index, answer: "Nova" });
-  if (brainrotMatch) facts.push({ key: "brainrot", position: brainrotMatch.index, answer: SAMMY_FACTS.favoriteBrainrot });
-  if (mutationMatch) facts.push({ key: "mutation", position: mutationMatch.index, answer: SAMMY_FACTS.favoriteMutation });
-  if (devMatch) facts.push({ key: "dev", position: devMatch.index, answer: SAMMY_FACTS.bestDev });
-if (ageMatch) facts.push({ key: "age", position: ageMatch.index, answer: String(SAMMY_FACTS.age) });
-if (birthdayMatch) facts.push({ key: "birthday", position: birthdayMatch.index, answer: SAMMY_FACTS.birthday });
-
-  facts.sort((a, b) => a.position - b.position);
-
-  return facts.length
-    ? [...new Map(facts.map((fact) => [fact.key, fact.answer])).values()].join(", ")
-    : null;
-}
 
 function requestedFields(q: string) {
   return {
-    income: /\b(income|earn|earns|earning|per second|money|makes|make|making|\/s)\b/.test(q),
-    rarity: /\b(rarity|rarities|rare|tier|what rarity|which rarity|what tier|which tier)\b/.test(q)
+    income: /\b(income|earn|earns|earning|per second|money|cash|dollars?|makes|make|making|generates?|produces?|\/s|\bps\b)\b/.test(q)
+      || /\bhow much\b/.test(q),
+    rarity: /\b(rarity|rarities|rare|tier|class|rank|what rarity|which rarity|what tier|which tier)\b/.test(q)
       || /\b(?:is|are)\b.*\b(?:an? )?(?:og|secret|brainrot)\b/.test(q),
-    exists: /\b(exist|exists|existing|how many|count|quantity|stock|owned)\b/.test(q),
+    exists: /\b(exist|exists|existing|spawned|spawn|how many|count|quantity|stock|owned|in game|in the game)\b/.test(q),
   };
 }
 
@@ -86,13 +56,85 @@ function formatUnit(unit: Unit, fields: ReturnType<typeof requestedFields>, incl
 }
 
 function findAllUnits(question: string, units: Unit[]): Unit[] {
-  const normalizedQuestion = question.toLowerCase().replace(/[^a-z0-9]/g, " ");
-  const matches = units.filter((unit) => normalizedQuestion.includes(unit[0].toLowerCase().replace(/[^a-z0-9]/g, " ")));
-  return [...new Map(matches.map((unit) => [unit[0], unit])).values()];
+  const normalizedQuestion = normalize(question);
+  const padded = ` ${normalizedQuestion} `;
+  const words = normalizedQuestion.split(" ");
+  const matches: { unit: Unit; score: number; exact: boolean }[] = [];
+
+  for (const unit of units) {
+    const name = normalize(unit[0]);
+    const nameWords = name.split(" ");
+    if (!name || nameWords.some((word) => word.length < 3)) continue;
+    if (padded.includes(` ${name} `)) {
+      matches.push({ unit, score: 1, exact: true });
+      continue;
+    }
+
+    // Compare same-length word windows so a typo in one Brainrot name
+    // does not force the entire question to be sent to AI.
+    let bestScore = 0;
+    for (let start = 0; start <= words.length - nameWords.length; start++) {
+      const phrase = words.slice(start, start + nameWords.length);
+      let score = 0;
+      let valid = true;
+      for (let i = 0; i < nameWords.length; i++) {
+        const expected = nameWords[i]!;
+        const actual = phrase[i]!;
+        if (expected === actual) { score += 1; continue; }
+        if (expected.length < 5 || actual.length < 5) { valid = false; break; }
+        const distance = editDistance(expected, actual);
+        const similarity = 1 - distance / Math.max(expected.length, actual.length);
+        if (similarity < 0.8) { valid = false; break; }
+        score += similarity;
+      }
+      if (valid) bestScore = Math.max(bestScore, score / nameWords.length);
+    }
+    if (bestScore >= 0.84) matches.push({ unit, score: bestScore, exact: false });
+  }
+
+  // Exact mentions always win. Fuzzy matches are retained only when clearly
+  // stronger than the next candidate, preventing typo correction guessing.
+  const exact = matches.filter((match) => match.exact).map((match) => match.unit);
+  const fuzzy = matches.filter((match) => !match.exact).sort((a, b) => b.score - a.score);
+  const selected = [...exact];
+  if (!exact.length && fuzzy.length) {
+    const best = fuzzy[0]!;
+    if (!fuzzy[1] || best.score - fuzzy[1].score >= 0.08) selected.push(best.unit);
+  }
+  return [...new Map(selected.map((unit) => [unit[0], unit])).values()];
 }
 
 function findRequestedMutation(q: string): string | null {
-  return MUTATIONS.map((mutation) => mutation.name).find((name) => ` ${q} `.includes(` ${normalize(name)} `)) ?? null;
+  const padded = ` ${normalize(q)} `;
+  const names = MUTATIONS.map((mutation) => mutation.name);
+  const exact = names.find((name) => padded.includes(` ${normalize(name)} `));
+  if (exact) return exact;
+
+  const words = normalize(q).split(" ");
+  const candidates: { name: string; score: number }[] = [];
+  for (const name of names) {
+    const expectedWords = normalize(name).split(" ");
+    if (expectedWords.some((word) => word.length < 4)) continue;
+    for (let start = 0; start <= words.length - expectedWords.length; start++) {
+      const phrase = words.slice(start, start + expectedWords.length);
+      let score = 0;
+      let valid = true;
+      for (let i = 0; i < expectedWords.length; i++) {
+        const expected = expectedWords[i]!;
+        const actual = phrase[i]!;
+        if (expected === actual) { score += 1; continue; }
+        if (actual.length < 4) { valid = false; break; }
+        const similarity = 1 - editDistance(expected, actual) / Math.max(expected.length, actual.length);
+        if (similarity < 0.8) { valid = false; break; }
+        score += similarity;
+      }
+      if (valid) candidates.push({ name, score: score / expectedWords.length });
+    }
+  }
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates[0] && (!candidates[1] || candidates[0].score - candidates[1].score >= 0.08)
+    ? candidates[0].name
+    : null;
 }
 
 function editDistance(a: string, b: string): number {
@@ -241,7 +283,7 @@ function answerFromCatalog(question: string): string | null {
       }
       return formatUnit(unit, fields, units.length > 1);
     });
-    return units.length > 1 || (fields.exists && mutation) ? unitAnswers.join("\n") : unitAnswers[0]!;
+    return units.length > 1 || (fields.exists && mutation) ? unitAnswers.join("; ") : unitAnswers[0]!;
   }
   return null;
 }
@@ -339,6 +381,8 @@ export function shouldDelegateToAi(question: string): boolean {
     /\b(favorite|favourite|fav)\b.*\b(taco|food|meal)\b/,
   ];
   if (intentPatterns.filter((pattern) => pattern.test(q)).length >= 2) return true;
+  // Multi-stat questions and other complete catalog matches stay local and free.
+  if (quickAnswer(question) !== null) return false;
   if (findAllUnits(question, UNITS).length > 1) return true;
   const hasMutation = findRequestedMutation(q) !== null;
   const hasUnit = findAllUnits(question, UNITS).length > 0;
@@ -369,13 +413,10 @@ if (updatesAnswer) answers.push(updatesAnswer);
     if (!rule.test.test(q)) continue;
     if (asksBestOG && rule.answer === bestObtainableOGAnswer) continue;
     const answer = rule.answer();
-if (personalAnswer && (
-  personalAnswer.split(", ").includes(answer) ||
-  /^your name:\s*sammy\.?$/i.test(answer.trim())
-)) continue;
+if (personalAnswer && personalAnswer.toLowerCase().includes(answer.toLowerCase())) continue;
 if (!answers.includes(answer)) answers.push(answer);
   }
   const bro = DB.bros.find((b) => q.includes(normalize(b.name)));
   if (bro && !answers.includes(bro.recipe)) answers.push(bro.recipe);
-  return answers.length ? answers.join("\n\n") : null;
+  return answers.length ? answers.join("; ") : null;
 }
